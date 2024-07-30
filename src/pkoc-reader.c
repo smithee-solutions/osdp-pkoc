@@ -26,7 +26,13 @@ int main
   fprintf(stderr, "pkoc-reader smartcard interface %s\n", PKOC_OSDP_VERSION);
   strcpy(my_oui_string, PKOC_OUI_STRING);
   my_response_id = OSDP_PKOC_CARD_PRESENT;
-  strcpy(my_payload_hex_string, "11223344");
+
+  // response payload is
+  // supported protocol version 5C 02 01 00
+  // transaction sequence FD 01 00
+  // error tlv FB 01 00
+
+  strcpy(my_payload_hex_string, "5C020100FD0100FB0100");
 
 /*
   initiate pcsc communications with card

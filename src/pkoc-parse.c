@@ -7,6 +7,38 @@
 #include <pkoc-osdp.h>
 
 
+/*
+  adds tlv (value is binary) to command buffer.  buffer is hex.
+*/
+int add_payload_element
+  (PKOC_CONTEXT *ctx,
+  char *command_buffer,
+  int *command_buffer_length,
+  unsigned char tag,
+  unsigned char length,
+  unsigned char *value)
+
+{ /* add_payload_element */
+
+  int i;
+  char payload_temp [1024];
+  char tstring [1024];
+
+
+  payload_temp [0] = 0;
+  sprintf(tstring, "%02X%02X", tag, length);
+  strcat(payload_temp, tstring);
+  for (i=0; i<length; i++)
+  {
+    sprintf(tstring, "%02X", value [i]);
+    strcat(payload_temp, tstring);
+  };
+  strcpy(command_buffer, payload_temp);
+  *command_buffer_length = strlen(payload_temp);
+  return(ST_OK);
+}
+
+
 int get_pkoc_settings
   (PKOC_CONTEXT *ctx)
 
@@ -37,6 +69,22 @@ int get_pkoc_settings
   return(status);
 
 } /* get_pkoc_settings */
+
+
+int match_oui
+  (PKOC_CONTEXT *ctx)
+
+{ /* match_oui */
+
+  int match;
+
+
+  match = 0;
+  if (0 EQUALS strcmp(ctx->oui_s, PKOC_OUI_STRING))
+    match = 1;
+  return(match);
+
+} /* match_oui */
 
 
 /*
@@ -103,7 +151,7 @@ int pkoc_parse
         parsed = 1;
         done = 1;
         break;
-      case PKOC_TAG_TRANSACTION_IDENTIFER:
+      case PKOC_TAG_TRANSACTION_IDENTIFIER:
         if (length EQUALS 0)
         {
           ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
@@ -124,6 +172,14 @@ int pkoc_parse
             status = ST_OK;
           };
         };
+        break;
+      case PKOC_TAG_PROTOCOL_VERSION:
+        ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
+        if (length EQUALS 2)
+          memcpy(ctx->protocol_version, p, length);
+        p = p + length;
+        unprocessed = unprocessed - length;
+        status = ST_OK;
         break;
       };
       if (unprocessed < 2)

@@ -20,7 +20,6 @@
 
 
 #include <pkoc-osdp.h>
-char *PKOC_OUI = "1A9021";
 
 
 int main
@@ -77,9 +76,7 @@ int main
     }
     else
     {
-      fprintf(ctx->log, "MFGREP contains wrong OUI (was %02X%02X%02X should be %02X%02X%02X)\n",
-        ctx->oui [0], ctx->oui [1], ctx->oui [2],
-        PKOC_OUI [0], PKOC_OUI [1], PKOC_OUI [2]);
+      fprintf(ctx->log, "MFG contains wrong OUI\n");
       status = ST_PKOC_WRONG_OUI;
     };
   };
@@ -87,7 +84,7 @@ int main
     fprintf(ctx->log, "pkoc-mfgrep error %d.\n", status);
   return(status);
 
-} /* main for pkoc-mfgrep.c */
+} /* main for pkoc-mfg.c */
 
 
 int get_pkoc_state
@@ -96,20 +93,4 @@ int get_pkoc_state
   //read pkoc-state.json
   return(0);
 }
-
-
-int match_oui
-  (PKOC_CONTEXT *ctx)
-
-{ /* match_oui */
-
-  int match;
-
-
-  match = 0;
-  if (0 EQUALS strcmp(ctx->oui_s, PKOC_OUI))
-    match = 1;
-  return(match);
-
-} /* match_oui */
 

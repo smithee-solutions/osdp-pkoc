@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <jansson.h>
+
 #include <pkoc-osdp.h>
 
 
@@ -18,14 +20,20 @@ int main
 
 { /* main for pkoc-init-pd */
 
+  json_t *parameters;
   char settings_string [PKOC_STRING_MAX];
   FILE *sf;
+  json_error_t status_json;
 
   fprintf(stderr, "Clearing out PKOC state.\n");
   system("rm -f pkoc-state.json");
-  if (1 /* pkoc-settings does not exist */)
+
+  strcpy(settings_string, 
+"{\"verbosity\":\"9\"}\n");
+
+  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
+  if (parameters EQUALS NULL)
   {
-    strcpy(settings_string, "{\"verbosity\":\"9\"}");
     sf = fopen("pkoc-settings.json", "w");
     fprintf(sf, "%s\n", settings_string);
 fprintf(stderr, "DEBUG: do init cleanly\n");

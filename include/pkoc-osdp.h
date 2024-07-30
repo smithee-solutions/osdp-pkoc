@@ -8,6 +8,7 @@
 #define ST_PKOC_MALFORMED_PAYLOAD (2)
 #define ST_PKOC_UNKNOWN_TAG       (3)
 #define ST_PKOC_XTN_ID_TOO_LONG   (4)
+#define ST_PKOC_BAD_SETTINGS      (5)
 
 #define PKOC_STRING_MAX (1024)
 #define PKOC_STATE_ACTIVATED (1)
@@ -25,6 +26,7 @@ typedef struct pkoc_context
   int verbosity;
   FILE *log;
   int current_state;
+  unsigned char command_id;
   unsigned char response_id;
   unsigned int payload_mask;
   unsigned char transaction_id [PKOC_TRANSACTION_ID_MAX]; 
@@ -32,6 +34,9 @@ typedef struct pkoc_context
   unsigned char oui [3];
   unsigned char payload [256];
   int payload_length;
+  char oui_s [PKOC_STRING_MAX];
+  char command_s [PKOC_STRING_MAX];
+  char payload_s [PKOC_STRING_MAX];
 } PKOC_CONTEXT;
 
 
@@ -48,8 +53,8 @@ typedef struct pkoc_payload_contents
 
 int get_pkoc_settings(PKOC_CONTEXT *ctx);
 int get_pkoc_state(PKOC_CONTEXT *ctx);
-int match_oui(PKOC_CONTEXT *ctx, unsigned char *mfg_command);
+int match_oui(PKOC_CONTEXT *ctx);
 int pkoc_parse(PKOC_CONTEXT *ctx, unsigned char * payload, int payload_length, PKOC_PAYLOAD_CONTENTS contents [], unsigned int *payload_mask);
-int unpack_response(PKOC_CONTEXT *ctx, int argc, char *argv [], unsigned char *mfg_response, int *response_length);
+int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);
 int update_pkoc_state(PKOC_CONTEXT *ctx);
 

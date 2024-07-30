@@ -1,36 +1,40 @@
 /*
-  pkoc-mfgrep - Manufacture-Specific Response processor for PKOC
+  pkoc-mfg - Manufacture-Specific Command processor for PKOC
 
-  assumes state is in pkoc-state.json
 
-  assumes settings are in pkoc-settings.json
+  standard input is a one-line JSON.  1 is pd address, 2 is the OUI,
+  3 is the command, 4 is the payload.
+
+  - assumes state is in pkoc-state.json
+  - assumes settings are in pkoc-settings.json
 
   (C)2024 Smithee Solutions LLC
 */
-
-// args per osdp interface for mfgrep command
 
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <jansson.h>
+
 
 #include <pkoc-osdp.h>
-unsigned char PKOC_OUI [3] = {0x1A, 0x90, 0x21};
+char *PKOC_OUI = "1A9021";
 
 
 int main
   (int argc,
   char *argv [])
 
-{ /* main for pkoc-mfgrep */
+{ /* main for pkoc-mfg */
 
+  int command_length;
   PKOC_CONTEXT *ctx;
-  unsigned char mfg_response [OSDP_MAX_PACKET_SIZE];
+  int i;
+  unsigned char mfg_command [OSDP_MAX_PACKET_SIZE];
   PKOC_CONTEXT my_context;
   unsigned int payload_mask;
-  int response_length;
   int status;
   PKOC_PAYLOAD_CONTENTS contents [PKOC_MAX_PAYLOAD_VALUES];
 
@@ -38,25 +42,27 @@ int main
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
   ctx->log = stderr;
-  response_length = sizeof(mfg_response);
+  command_length = sizeof(mfg_command);
  
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)
-    status = unpack_response(ctx, argc, argv, mfg_response, &response_length);
+    status = unpack_command(ctx, argc, argv);
   if (status EQUALS ST_OK)
   {
-    if (match_oui(ctx, mfg_response))
+    if (match_oui(ctx))
     {
       status = get_pkoc_state(ctx);
       if (status EQUALS ST_OK)
       {
-        switch(ctx->response_id)
+        sscanf(ctx->command_s, "%x", &i);
+        ctx->command_id = i;
+        switch(ctx->command_id)
         {
         default:
-          fprintf(ctx->log, "Unknown mfg_command ID (%02X)\n", ctx->response_id);
+          fprintf(ctx->log, "Unknown mfg_command ID (%02X)\n", ctx->command_id);
           break;
         case OSDP_PKOC_NEXT_TRANSACTION:
-          status = pkoc_parse(ctx, mfg_response, response_length, contents, &payload_mask);
+          status = pkoc_parse(ctx, mfg_command, command_length, contents, &payload_mask);
           if (status EQUALS ST_OK)
           {
             ctx->current_state = PKOC_STATE_ACTIVATED;
@@ -95,24 +101,48 @@ int get_pkoc_state
 
 int get_pkoc_settings
   (PKOC_CONTEXT *ctx)
-{
+
+{ /* get_pkoc_settings */
+
+  json_t *parameters;
+  int status;
+  json_error_t status_json;
+  json_t *value;
+
+
+  status = ST_OK;
   //read pkoc-settings.json
-  return(0);
-}
+
+  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
+  if (parameters != NULL)
+  {
+    value = json_object_get(parameters, "verbosity");
+    if (json_is_string(value))
+    {
+      sscanf(json_string_value(value), "%d", &(ctx->verbosity));
+    };
+  }
+  else
+  {
+    status = ST_PKOC_BAD_SETTINGS;
+  };
+  return(status);
+
+} /* get_pkoc_settings */
 
 
 int match_oui
-  (PKOC_CONTEXT *ctx,
-  unsigned char * raw_response)
-{
+  (PKOC_CONTEXT *ctx)
+
+{ /* match_oui */
+
   int match;
 
 
   match = 0;
-  if (raw_response [0] EQUALS PKOC_OUI [0])
-    if (raw_response [1] EQUALS PKOC_OUI [1])
-      if (raw_response [2] EQUALS PKOC_OUI [2])
-        match = 1;
+  if (0 EQUALS strcmp(ctx->oui_s, PKOC_OUI))
+    match = 1;
   return(match);
-}
+
+} /* match_oui */
 

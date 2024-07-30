@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <jansson.h>
+
 
 #include <pkoc-osdp.h>
 
@@ -99,18 +101,47 @@ int pkoc_parse
 } /* pkoc_parse */
 
 
-int unpack_response
+/*
+  unpack_command - converts the json input into parsed values
+
+  accepts argc/argv so it can use non-stdin input in the future.
+*/
+
+int unpack_command
   (PKOC_CONTEXT *ctx,
   int argc,
-  char *argv [],
-  unsigned char *mfg_response,
-  int *response_length)
+  char *argv [])
 
-{
-  *response_length = 0;
-  *mfg_response = 0;
+{ /* unpack_command */
+
+  char json_command [8192];
+  json_t *mfg_command;
+  char *status_io;
+  json_error_t status_json;
+  json_t *value;
+
+
+  status_io = fgets(json_command, sizeof(json_command), stdin);
+  if (status_io != NULL)
+  {
+    mfg_command = json_loads(json_command, 0, &status_json);
+    if (mfg_command != NULL)
+    {
+      value = json_object_get(mfg_command, "2");
+      if (json_is_string(value))
+        strcpy(ctx->oui_s, json_string_value(value));
+      value = json_object_get(mfg_command, "3");
+      if (json_is_string(value))
+        strcpy(ctx->command_s, json_string_value(value));
+      value = json_object_get(mfg_command, "4");
+      if (json_is_string(value))
+        strcpy(ctx->payload_s, json_string_value(value));
+    };
+  };
   return(ST_OK);
-}
+
+} /* unpack_command */
+
 
 int update_pkoc_state
   (PKOC_CONTEXT *ctx)

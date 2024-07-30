@@ -19,7 +19,14 @@
 #define OSDP_PKOC_NEXT_TRANSACTION (0xE3)
 #define OSDP_PKOC_TRANSACTION_IDENTIFER (0xE4)
 #define OSDP_PKOC_READER_ERROR          (0xFE)
+
 #define PKOC_TRANSACTION_ID_MAX (65)
+
+#define PKOC_TAG_PROTOCOL_VERSION (0x5C)
+#define PKOC_TAG_TRANSACTION_IDENTIFER (0x4C)
+#define PKOC_TAG_READER_IDENTIFER      (0x4D)
+#define PKOC_TAG_DIGITAL_SIGNATURE     (0x9E)
+#define PKOC_TAG_UNCOMP_PUBLIC_KEY     (0x5A)
 
 typedef struct pkoc_context
 {
@@ -53,8 +60,9 @@ typedef struct pkoc_payload_contents
 
 int get_pkoc_settings(PKOC_CONTEXT *ctx);
 int get_pkoc_state(PKOC_CONTEXT *ctx);
+int hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
 int match_oui(PKOC_CONTEXT *ctx);
-int pkoc_parse(PKOC_CONTEXT *ctx, unsigned char * payload, int payload_length, PKOC_PAYLOAD_CONTENTS contents [], unsigned int *payload_mask);
+int pkoc_parse(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);
 int update_pkoc_state(PKOC_CONTEXT *ctx);
 

@@ -7,6 +7,38 @@
 #include <pkoc-osdp.h>
 
 
+int get_pkoc_settings
+  (PKOC_CONTEXT *ctx)
+
+{ /* get_pkoc_settings */
+
+  json_t *parameters;
+  int status;
+  json_error_t status_json;
+  json_t *value;
+
+
+  status = ST_OK;
+  //read pkoc-settings.json
+
+  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
+  if (parameters != NULL)
+  {
+    value = json_object_get(parameters, "verbosity");
+    if (json_is_string(value))
+    {
+      sscanf(json_string_value(value), "%d", &(ctx->verbosity));
+    };
+  }
+  else
+  {
+    status = ST_PKOC_BAD_SETTINGS;
+  };
+  return(status);
+
+} /* get_pkoc_settings */
+
+
 /*
   parsing for PKOC is simple:
     length always one octet
@@ -19,10 +51,7 @@
 
 int pkoc_parse
   (PKOC_CONTEXT *ctx,
-  unsigned char * payload,
-  int payload_length,
-  PKOC_PAYLOAD_CONTENTS contents [],
-  unsigned int *payload_mask)
+  PKOC_PAYLOAD_CONTENTS contents [])
 
 { /* pkoc_parse */
 
@@ -30,14 +59,20 @@ int pkoc_parse
   int length;
   unsigned char *p;
   int parsed;
+  unsigned char payload [OSDP_MAX_PACKET_SIZE];
+  int payload_length;
   int status;
   unsigned char tag;
   int unprocessed;
 
 
+  status = hex_to_binary(ctx, payload, &payload_length);
+  if (status EQUALS ST_OK)
+  {
+
   status = ST_PKOC_MALFORMED_PAYLOAD;
   parsed = 0;
-  *payload_mask = 0;
+  ctx->payload_mask = 0;
 
   if ((payload_length EQUALS 1) && (*payload EQUALS 0))
   {
@@ -68,10 +103,11 @@ int pkoc_parse
         parsed = 1;
         done = 1;
         break;
-      case OSDP_PKOC_NEXT_TRANSACTION:
+      case PKOC_TAG_TRANSACTION_IDENTIFER:
         if (length EQUALS 0)
         {
-          *payload_mask = *payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
+          status = ST_OK;
         }
         else
         {
@@ -79,12 +115,13 @@ int pkoc_parse
             status = ST_PKOC_XTN_ID_TOO_LONG;
           else
           {
-            *payload_mask = *payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
+            ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
             contents [IDX_XTN_ID].tag = OSDP_PKOC_NEXT_TRANSACTION;
             contents [IDX_XTN_ID].length = length;
             memcpy(contents [IDX_XTN_ID].value, p, length);
             p = p + length;
             unprocessed = unprocessed - length;
+            status = ST_OK;
           };
         };
         break;
@@ -95,10 +132,51 @@ int pkoc_parse
         done = 1;
     };
   };
+  };
   
   return(status);
 
 } /* pkoc_parse */
+
+
+int hex_to_binary
+  (PKOC_CONTEXT *ctx,
+  unsigned char *binary,
+  int *length)
+
+{ /* hex_to_binary */
+
+  int count;
+  int hexit;
+  char octet_string [3];
+  char *p;
+  unsigned char *pbinary;
+
+
+  *length = 0;
+  p = ctx->payload_s;
+  pbinary = binary;
+  count = strlen(ctx->payload_s);
+  if ((count % 2) != 0)
+  {
+    count = count - 1;
+    fprintf(ctx->log, "trimming hex string to even number of hexits.\n");
+  };
+  while (count > 0)
+  {
+    memcpy(octet_string, p, 2);
+    octet_string [2] = 0;
+    sscanf(octet_string, "%x", &hexit);
+    *pbinary = hexit;
+    pbinary++;
+    p = p + 2;
+    count = count - 2;
+    (*length)++;
+  };
+
+  return(ST_OK);
+
+} /* hex_to_binary */
 
 
 /*
@@ -146,7 +224,12 @@ int unpack_command
 int update_pkoc_state
   (PKOC_CONTEXT *ctx)
 {
+  FILE *state;
+
+  state = fopen("pkoc-state.json", "w");
+  fprintf(state, "{\"state\":\"%d\"}\n", ctx->current_state);
+  fclose(state);
+
   return(ST_OK);
 }
-
 

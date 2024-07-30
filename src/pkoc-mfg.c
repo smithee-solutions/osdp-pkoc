@@ -34,7 +34,6 @@ int main
   int i;
   unsigned char mfg_command [OSDP_MAX_PACKET_SIZE];
   PKOC_CONTEXT my_context;
-  unsigned int payload_mask;
   int status;
   PKOC_PAYLOAD_CONTENTS contents [PKOC_MAX_PAYLOAD_VALUES];
 
@@ -62,7 +61,7 @@ int main
           fprintf(ctx->log, "Unknown mfg_command ID (%02X)\n", ctx->command_id);
           break;
         case OSDP_PKOC_NEXT_TRANSACTION:
-          status = pkoc_parse(ctx, mfg_command, command_length, contents, &payload_mask);
+          status = pkoc_parse(ctx, contents);
           if (status EQUALS ST_OK)
           {
             ctx->current_state = PKOC_STATE_ACTIVATED;
@@ -97,38 +96,6 @@ int get_pkoc_state
   //read pkoc-state.json
   return(0);
 }
-
-
-int get_pkoc_settings
-  (PKOC_CONTEXT *ctx)
-
-{ /* get_pkoc_settings */
-
-  json_t *parameters;
-  int status;
-  json_error_t status_json;
-  json_t *value;
-
-
-  status = ST_OK;
-  //read pkoc-settings.json
-
-  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
-  if (parameters != NULL)
-  {
-    value = json_object_get(parameters, "verbosity");
-    if (json_is_string(value))
-    {
-      sscanf(json_string_value(value), "%d", &(ctx->verbosity));
-    };
-  }
-  else
-  {
-    status = ST_PKOC_BAD_SETTINGS;
-  };
-  return(status);
-
-} /* get_pkoc_settings */
 
 
 int match_oui

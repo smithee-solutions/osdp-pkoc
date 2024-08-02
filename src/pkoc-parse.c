@@ -114,80 +114,99 @@ int pkoc_parse
   int unprocessed;
 
 
+  parsed = 0;
   status = hex_to_binary(ctx, payload, &payload_length);
+  p = payload;
+  if (payload_length < 6) // 2+2+2 header in actual payload
+    status = ST_PKOC_PAYLOAD_TOO_SHORT;
   if (status EQUALS ST_OK)
   {
+    status = ST_PKOC_MALFORMED_PAYLOAD;
+    parsed = 0;
+    ctx->payload_mask = 0;
 
-  status = ST_PKOC_MALFORMED_PAYLOAD;
-  parsed = 0;
-  ctx->payload_mask = 0;
-
-  if ((payload_length EQUALS 1) && (*payload EQUALS 0))
-  {
-    status = ST_OK;
-    parsed = 1;
-  };
-  if (!parsed)
-  {
-    if (payload_length EQUALS 0)
+    // skip over the (generic) multipart header
+    if (ctx->verbosity > 3)
     {
-    status = ST_OK;
-    parsed = 1;
+      unsigned short int l1;
+      unsigned short int l2;
+      unsigned short int l3;
+      memcpy(&l1, p, 2);
+      p = p + 2;
+      payload_length = payload_length -2;
+      memcpy(&l2, p, 2);
+      p = p + 2;
+      payload_length = payload_length -2;
+      memcpy(&l3, p, 2);
+      p = p + 2;
+      payload_length = payload_length -2;
     };
-  };
-  if (!parsed)
-  {
-    done = 0;
-    p = payload;
-    unprocessed = payload_length;
-    while (!done)
+
+    if ((payload_length EQUALS 1) && (*payload EQUALS 0))
     {
-      tag = *p; p++; unprocessed --;
-      length = *p; p++; unprocessed --;
-      switch (tag)
+      status = ST_OK;
+      parsed = 1;
+    };
+    if (!parsed)
+    {
+      if (payload_length EQUALS 0)
       {
-      default:
-        status = ST_PKOC_UNKNOWN_TAG;
+        status = ST_OK;
         parsed = 1;
-        done = 1;
-        break;
-      case PKOC_TAG_TRANSACTION_IDENTIFIER:
-        if (length EQUALS 0)
+      };
+    };
+    if (!parsed)
+    {
+      done = 0;
+      unprocessed = payload_length;
+      while (!done)
+      {
+        tag = *p; p++; unprocessed --;
+        length = *p; p++; unprocessed --;
+        switch (tag)
         {
-          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
-          status = ST_OK;
-        }
-        else
-        {
-          if (length > PKOC_TRANSACTION_ID_MAX)
-            status = ST_PKOC_XTN_ID_TOO_LONG;
-          else
+        default:
+          status = ST_PKOC_UNKNOWN_TAG;
+          parsed = 1;
+          done = 1;
+          break;
+        case PKOC_TAG_TRANSACTION_IDENTIFIER:
+          if (length EQUALS 0)
           {
             ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
-            contents [IDX_XTN_ID].tag = OSDP_PKOC_NEXT_TRANSACTION;
-            contents [IDX_XTN_ID].length = length;
-            memcpy(contents [IDX_XTN_ID].value, p, length);
-            p = p + length;
-            unprocessed = unprocessed - length;
             status = ST_OK;
+          }
+          else
+          {
+            if (length > PKOC_TRANSACTION_ID_MAX)
+              status = ST_PKOC_XTN_ID_TOO_LONG;
+            else
+            {
+              ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
+              contents [IDX_XTN_ID].tag = OSDP_PKOC_NEXT_TRANSACTION;
+              contents [IDX_XTN_ID].length = length;
+              memcpy(contents [IDX_XTN_ID].value, p, length);
+              p = p + length;
+              unprocessed = unprocessed - length;
+              status = ST_OK;
+            };
           };
+          break;
+        case PKOC_TAG_PROTOCOL_VERSION:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
+          if (length EQUALS 2)
+            memcpy(ctx->protocol_version, p, length);
+          p = p + length;
+          unprocessed = unprocessed - length;
+          status = ST_OK;
+          break;
         };
-        break;
-      case PKOC_TAG_PROTOCOL_VERSION:
-        ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
-        if (length EQUALS 2)
-          memcpy(ctx->protocol_version, p, length);
-        p = p + length;
-        unprocessed = unprocessed - length;
-        status = ST_OK;
-        break;
+        if (unprocessed < 2)
+          done = 1; 
+        if (status != ST_OK)
+          done = 1;
       };
-      if (unprocessed < 2)
-        done = 1; 
-      if (status != ST_OK)
-        done = 1;
     };
-  };
   };
   
   return(status);

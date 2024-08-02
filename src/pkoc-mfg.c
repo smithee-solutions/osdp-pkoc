@@ -28,10 +28,8 @@ int main
 
 { /* main for pkoc-mfg */
 
-  int command_length;
   PKOC_CONTEXT *ctx;
   int i;
-  unsigned char mfg_command [OSDP_MAX_PACKET_SIZE];
   PKOC_CONTEXT my_context;
   int status;
   PKOC_PAYLOAD_CONTENTS contents [PKOC_MAX_PAYLOAD_VALUES];
@@ -40,7 +38,6 @@ int main
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
   ctx->log = stderr;
-  command_length = sizeof(mfg_command);
  
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)

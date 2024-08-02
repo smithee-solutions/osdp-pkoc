@@ -30,10 +30,8 @@ int main
 
   char command_buffer [8192];
   int command_buffer_length;
-  int response_length;
   PKOC_CONTEXT *ctx;
   int i;
-  unsigned char mfg_response [OSDP_MAX_PACKET_SIZE];
   PKOC_CONTEXT my_context;
   char osdp_directive [8192];
   int status;
@@ -43,7 +41,6 @@ int main
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
   ctx->log = stderr;
-  response_length = sizeof(mfg_response);
  
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)
@@ -78,17 +75,20 @@ int main
           */
           command_buffer_length = 0;
           memset(command_buffer, 0, sizeof(command_buffer));
+          // first 6 bytes are 0 for the multipart header
+          strcpy(command_buffer, "000000000000");
+          command_buffer_length = 2*6;
           status = add_payload_element(ctx, command_buffer, &command_buffer_length,
             PKOC_TAG_PROTOCOL_VERSION, 2, ctx->protocol_version);
           if (status EQUALS ST_OK)
             status = add_payload_element(ctx, command_buffer, &command_buffer_length,
-            PKOC_TAG_TRANSACTION_IDENTIFIER, 65, ctx->transaction_identifier);
+              PKOC_TAG_TRANSACTION_IDENTIFIER, 65, ctx->transaction_identifier);
           if (status EQUALS ST_OK)
             status = add_payload_element(ctx, command_buffer, &command_buffer_length,
-            PKOC_TAG_READER_IDENTIFIER, 32, ctx->reader_identifier);
+              PKOC_TAG_READER_IDENTIFIER, 32, ctx->reader_identifier);
           if (status EQUALS ST_OK)
             status = add_payload_element(ctx, command_buffer, &command_buffer_length,
-            PKOC_TAG_XTN_SEQ, 2, ctx->transaction_sequence);
+              PKOC_TAG_XTN_SEQ, 2, ctx->transaction_sequence);
 // how long is the transaction sequence?
            
           if (status EQUALS ST_OK)

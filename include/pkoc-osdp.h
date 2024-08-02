@@ -11,6 +11,7 @@
 #define ST_PKOC_BAD_SETTINGS      (5)
 #define ST_PKOC_NO_VERSION        (6)
 #define ST_PKOC_OSDP_MISSING      (7)
+#define ST_PKOC_PAYLOAD_TOO_SHORT (8)
 
 #define PKOC_STRING_MAX (1024)
 

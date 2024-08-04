@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include <jansson.h>
 
@@ -87,6 +88,18 @@ int match_oui
 } /* match_oui */
 
 
+char * mph_in_hex
+  (OSDP_MULTIPART_HEADER *mph)
+
+{ /* mph_in_hex */
+
+  static char answer [2048];
+  sprintf(answer, "%04X%04X%04X", htons(mph->offset), htons(mph->fragment_length), htons(mph->total_length));
+  return(answer);
+
+} /* mph_in_hex */
+
+
 /*
   parsing for PKOC is simple:
     length always one octet
@@ -105,6 +118,7 @@ int pkoc_parse
 
   int done;
   int length;
+  OSDP_MULTIPART_HEADER *mph;
   unsigned char *p;
   int parsed;
   unsigned char payload [OSDP_MAX_PACKET_SIZE];
@@ -128,18 +142,11 @@ int pkoc_parse
     // skip over the (generic) multipart header
     if (ctx->verbosity > 3)
     {
-      unsigned short int l1;
-      unsigned short int l2;
-      unsigned short int l3;
-      memcpy(&l1, p, 2);
-      p = p + 2;
-      payload_length = payload_length -2;
-      memcpy(&l2, p, 2);
-      p = p + 2;
-      payload_length = payload_length -2;
-      memcpy(&l3, p, 2);
-      p = p + 2;
-      payload_length = payload_length -2;
+      mph = (OSDP_MULTIPART_HEADER *)p;
+      p = p + sizeof(*mph);
+
+      fprintf(stderr, "DEBUG: multipart offset %04x fraglth %04x totlth %04x\n",
+        mph->offset, mph->fragment_length, mph->total_length);
     };
 
     if ((payload_length EQUALS 1) && (*payload EQUALS 0))

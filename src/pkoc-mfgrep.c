@@ -74,10 +74,9 @@ int main
             there's a card.  do an auth request
           */
           command_buffer_length = 0;
+
           memset(command_buffer, 0, sizeof(command_buffer));
-          // first 6 bytes are 0 for the multipart header
-          strcpy(command_buffer, "000000000000");
-          command_buffer_length = 2*6;
+          command_buffer_length = 0;
           status = add_payload_element(ctx, command_buffer, &command_buffer_length,
             PKOC_TAG_PROTOCOL_VERSION, 2, ctx->protocol_version);
           if (status EQUALS ST_OK)
@@ -91,6 +90,20 @@ int main
               PKOC_TAG_XTN_SEQ, 2, ctx->transaction_sequence);
 // how long is the transaction sequence?
            
+          if (status EQUALS ST_OK)
+          {
+            char tstring1 [4096];
+            char tstring2 [4096];
+            OSDP_MULTIPART_HEADER my_payload_header;
+            my_payload_header.offset = 0;
+            my_payload_header.fragment_length = command_buffer_length/2;
+            my_payload_header.total_length = my_payload_header.fragment_length;
+            strcpy(tstring1, mph_in_hex(&my_payload_header));
+            strcpy(tstring2, command_buffer);
+            strcpy(command_buffer, tstring1);
+            strcat(command_buffer, tstring2);
+          };
+
           if (status EQUALS ST_OK)
           {
             sprintf(osdp_directive,

@@ -7,6 +7,7 @@
 
   - assumes state is in pkoc-state.json
   - assumes settings are in pkoc-settings.json
+  - assumes multipart header
 
   (C)2024 Smithee Solutions LLC
 */

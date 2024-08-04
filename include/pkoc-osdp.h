@@ -3,6 +3,15 @@
 #define EQUALS ==
 #define OSDP_MAX_PACKET_SIZE (1400)
 
+
+typedef struct __attribute__((packed)) osdp_multipart_header
+{
+  unsigned short int offset;
+  unsigned short int fragment_length;
+  unsigned short int total_length;
+} OSDP_MULTIPART_HEADER;
+
+
 #define ST_OK (0)
 #define ST_PKOC_WRONG_OUI (1)
 #define ST_PKOC_MALFORMED_PAYLOAD (2)
@@ -78,6 +87,7 @@ int get_pkoc_settings(PKOC_CONTEXT *ctx);
 int get_pkoc_state(PKOC_CONTEXT *ctx);
 int hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
 int match_oui(PKOC_CONTEXT *ctx);
+char * mph_in_hex(OSDP_MULTIPART_HEADER *mph);
 int pkoc_parse(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 int send_osdp_command(PKOC_CONTEXT *ctx, char *destination, char *command_string);
 int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);

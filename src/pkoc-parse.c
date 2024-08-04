@@ -138,15 +138,16 @@ int pkoc_parse
     status = ST_PKOC_MALFORMED_PAYLOAD;
     parsed = 0;
     ctx->payload_mask = 0;
+    mph = (OSDP_MULTIPART_HEADER *)p;
+    p = p + sizeof(*mph);
+    payload_length = payload_length - sizeof(*mph);
 
     // skip over the (generic) multipart header
     if (ctx->verbosity > 3)
     {
-      mph = (OSDP_MULTIPART_HEADER *)p;
-      p = p + sizeof(*mph);
 
       fprintf(stderr, "DEBUG: multipart offset %04x fraglth %04x totlth %04x\n",
-        mph->offset, mph->fragment_length, mph->total_length);
+        ntohs(mph->offset), ntohs(mph->fragment_length), ntohs(mph->total_length));
     };
 
     if ((payload_length EQUALS 1) && (*payload EQUALS 0))

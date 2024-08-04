@@ -64,10 +64,15 @@ int main
             ctx->current_state = PKOC_STATE_ACTIVATED;
             if (ctx->payload_mask & PAYLOAD_HAS_TRANSACTION_ID)
               status = update_pkoc_state(ctx);
+
+            if (ctx->verbosity > 3)
+              fprintf(ctx->log, "PKOC: MFG NEXT_TRANSACTION processed.\n");
           };
           break;
         case OSDP_PKOC_AUTH_REQUEST:
-          system("card-reader --request-auth");
+          system("/opt/osdp-conformance/bin/card-reader --request-auth");
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "PKOC: MFG AUTH_REQUEST processed.\n");
           break;
         };
       };

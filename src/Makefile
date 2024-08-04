@@ -21,8 +21,8 @@ pkoc-mfg:	pkoc-mfg.o pkoc-parse.o Makefile
 pkoc-mfgrep:	pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o Makefile
 	${LINK} -o pkoc-mfgrep pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o ${LDFLAGS}
 
-pkoc-reader:	pkoc-reader.o pkoc-parse.o Makefile
-	${LINK} -o pkoc-reader pkoc-reader.o pkoc-parse.o ${LDFLAGS}
+pkoc-reader:	pkoc-reader.o pkoc-osdp-interface.o pkoc-parse.o Makefile
+	${LINK} -o pkoc-reader pkoc-reader.o pkoc-osdp-interface.o pkoc-parse.o ${LDFLAGS}
 
 pkoc-init-pd.o:	pkoc-init-pd.c
 	${CC} ${CFLAGS} pkoc-init-pd.c 

@@ -70,7 +70,7 @@ int main
           };
           break;
         case OSDP_PKOC_AUTH_REQUEST:
-          system("/opt/osdp-conformance/bin/card-reader --request-auth");
+          system("/opt/osdp-conformance/bin/pkoc-reader --request-auth");
           if (ctx->verbosity > 3)
             fprintf(ctx->log, "PKOC: MFG AUTH_REQUEST processed.\n");
           break;

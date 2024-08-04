@@ -14,6 +14,8 @@ int main
 
 { /* main for pkoc-reader */
 
+  PKOC_CONTEXT *ctx;
+  PKOC_CONTEXT my_context;
   char my_oui_string [1024];
   OSDP_MULTIPART_HEADER my_payload_header;
   char my_payload_hex_string [1024];
@@ -24,12 +26,17 @@ int main
 
 
   status = ST_OK;
+  ctx = &my_context;
+  ctx->log = stderr;
 
   fprintf(stderr, "pkoc-reader smartcard interface %s\n", PKOC_OSDP_VERSION);
   strcpy(my_oui_string, PKOC_OUI_STRING);
   my_response_id = OSDP_PKOC_CARD_PRESENT;
 
   my_payload_hex_string [0] = 0;
+  my_payload_header.offset = 0;
+  my_payload_header.fragment_length = 10;
+  my_payload_header.total_length = my_payload_header.fragment_length;
   strcpy(tstring, mph_in_hex(&my_payload_header));
   strcat(my_payload_hex_string, tstring);
 
@@ -52,7 +59,9 @@ int main
     sprintf(osdp_directive,
 "{\"command\":\"mfgrep\",\"oui\":\"%s\",\"response-id\":\"%02X\",\"response-specific-data\":\"%s\"}\n",
     my_oui_string, my_response_id, my_payload_hex_string);
-fprintf(stderr, "DEBUG: directive is: %s\n", osdp_directive);
+    if (ctx->verbosity > 3)
+      fprintf(ctx->log, "DEBUG: directive is: %s\n", osdp_directive);
+    status = send_osdp_command(ctx, "/opt/osdp-conformance/run/PD/open-osdp-control", osdp_directive);
   };
   return(status);
 }

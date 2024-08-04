@@ -6,6 +6,8 @@ LINK=clang
 LDFLAGS=-g -ljansson
 
 all:	${PKOC_PROGRAMS}
+	mkdir -p ../opt/osdp-conformance/bin
+	cp ${PKOC_PROGRAMS} ../opt/osdp-conformance/bin
 
 clean:
 	rm -f *.o core ${PKOC_PROGRAMS}

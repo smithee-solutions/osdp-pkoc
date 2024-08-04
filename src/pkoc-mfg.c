@@ -84,7 +84,7 @@ int main
     };
   };
   if (status != ST_OK)
-    fprintf(ctx->log, "pkoc-mfgrep error %d.\n", status);
+    fprintf(ctx->log, "pkoc-mfg error %d.\n", status);
   return(status);
 
 } /* main for pkoc-mfg.c */

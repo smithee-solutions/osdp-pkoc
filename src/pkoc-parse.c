@@ -54,7 +54,7 @@ int get_pkoc_settings
   status = ST_OK;
   //read pkoc-settings.json
 
-  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
+  parameters = json_load_file("/opt/osdp-conformance/etc/pkoc-settings.json", 0, &status_json);
   if (parameters != NULL)
   {
     value = json_object_get(parameters, "verbosity");

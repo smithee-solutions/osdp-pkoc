@@ -21,8 +21,12 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 #define ST_PKOC_NO_VERSION        (6)
 #define ST_PKOC_OSDP_MISSING      (7)
 #define ST_PKOC_PAYLOAD_TOO_SHORT (8)
+#define ST_PKOC_UNKNOWN_SWITCH    (9)
 
 #define PKOC_STRING_MAX (1024)
+
+#define PKOC_SWITCH_HELP (1)
+#define PKOC_SWITCH_REQ_AUTH (2)
 
 #define PKOC_STATE_ACTIVATED (1)
 #define PKOC_STATE_READING   (2)
@@ -52,11 +56,11 @@ typedef struct pkoc_context
 {
   int verbosity;
   FILE *log;
+  int action;
   int current_state;
   unsigned char command_id;
   unsigned char response_id;
   unsigned int payload_mask;
-  unsigned char protocol_version [2];
   unsigned char reader_identifier [32];
   unsigned char transaction_identifier [PKOC_TRANSACTION_ID_MAX]; 
   unsigned char transaction_sequence [2]; //check
@@ -73,7 +77,7 @@ typedef struct pkoc_context
 #define PAYLOAD_HAS_TRANSACTION_ID (0x0001)
 #define PAYLOAD_HAS_PROTOVER       (0x8000)
 #define IDX_XTN_ID       (0)
-#define IDX_PROTO_VER_ID (1)
+#define IDX_PROTO_VER    (1)
 typedef struct pkoc_payload_contents
 {
   unsigned char tag;

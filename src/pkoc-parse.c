@@ -145,7 +145,6 @@ int pkoc_parse
     // skip over the (generic) multipart header
     if (ctx->verbosity > 3)
     {
-
       fprintf(stderr, "DEBUG: multipart offset %04x fraglth %04x totlth %04x\n",
         ntohs(mph->offset), ntohs(mph->fragment_length), ntohs(mph->total_length));
     };
@@ -174,6 +173,8 @@ int pkoc_parse
         switch (tag)
         {
         default:
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Unknown tag %02X\n", tag);
           status = ST_PKOC_UNKNOWN_TAG;
           parsed = 1;
           done = 1;
@@ -182,6 +183,8 @@ int pkoc_parse
           if (length EQUALS 0)
           {
             ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
+            contents [IDX_XTN_ID].tag = tag;
+            contents [IDX_XTN_ID].length = 0;
             status = ST_OK;
           }
           else
@@ -191,7 +194,7 @@ int pkoc_parse
             else
             {
               ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
-              contents [IDX_XTN_ID].tag = OSDP_PKOC_NEXT_TRANSACTION;
+              contents [IDX_XTN_ID].tag = tag;
               contents [IDX_XTN_ID].length = length;
               memcpy(contents [IDX_XTN_ID].value, p, length);
               p = p + length;
@@ -199,13 +202,24 @@ int pkoc_parse
               status = ST_OK;
             };
           };
+          if (status EQUALS ST_OK)
+            if (ctx->verbosity > 3)
+              fprintf(ctx->log, "Tag: Transaction ID (l=%d.) %02X...\n",
+                contents [IDX_XTN_ID].length, contents [IDX_XTN_ID].value [0]);
           break;
         case PKOC_TAG_PROTOCOL_VERSION:
           ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
           if (length EQUALS 2)
-            memcpy(ctx->protocol_version, p, length);
+          {
+            contents [IDX_PROTO_VER].tag = tag;
+            contents [IDX_PROTO_VER].length = length;
+            memcpy(contents [IDX_PROTO_VER].value, p, length);
+          };
           p = p + length;
           unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Protocol Version %02X%02X\n",
+              contents [IDX_PROTO_VER].value [0], contents [IDX_PROTO_VER].value [1]);
           status = ST_OK;
           break;
         };

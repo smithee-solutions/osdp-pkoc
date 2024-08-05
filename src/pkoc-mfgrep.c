@@ -78,7 +78,7 @@ int main
           memset(command_buffer, 0, sizeof(command_buffer));
           command_buffer_length = 0;
           status = add_payload_element(ctx, command_buffer, &command_buffer_length,
-            PKOC_TAG_PROTOCOL_VERSION, 2, ctx->protocol_version);
+            PKOC_TAG_PROTOCOL_VERSION, 2, contents [IDX_PROTO_VER].value);
           if (status EQUALS ST_OK)
             status = add_payload_element(ctx, command_buffer, &command_buffer_length,
               PKOC_TAG_TRANSACTION_IDENTIFIER, 65, ctx->transaction_identifier);

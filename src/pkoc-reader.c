@@ -4,9 +4,22 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <pkoc-osdp.h>
 #include <pkoc-osdp-version.h>
+
+int longindex;
+PKOC_CONTEXT my_context;
+char optstring [1024];
+struct option longopts [] = 
+{
+  {"help", 0, &(my_context.action), PKOC_SWITCH_HELP},
+  {"request-auth", 0, &(my_context.action), PKOC_SWITCH_REQ_AUTH},
+  {0, 0, 0, 0}
+};
+int status_opt;
+  
 
 int main
   (int argc,
@@ -15,7 +28,6 @@ int main
 { /* main for pkoc-reader */
 
   PKOC_CONTEXT *ctx;
-  PKOC_CONTEXT my_context;
   char my_oui_string [1024];
   OSDP_MULTIPART_HEADER my_payload_header;
   char my_payload_hex_string [1024];
@@ -66,3 +78,40 @@ int main
   return(status);
 }
   
+
+int pkoc_switches
+  (PKOC_CONTEXT *ctx,
+  int *command,
+  int argc,
+  char *argv [])
+
+{ /* pkoc_switches */
+
+  int done;
+  int status;
+
+
+  status = ST_OK;
+  done = 0;
+  while (!done)
+  {
+    status_opt = getopt_long(argc, argv, optstring, longopts, &longindex);
+    switch(ctx->action)
+    {
+    case PKOC_SWITCH_REQ_AUTH:
+      fprintf(stderr, "read a card.\n");
+      status = ST_OK;
+    case PKOC_SWITCH_HELP:
+      fprintf(stderr, "--help - display this help text.\n");
+      fprintf(stderr, "--request-auth - request card authenticate\n");
+      status = ST_OK;
+      break;
+    default:
+      status = ST_PKOC_UNKNOWN_SWITCH;
+      break;
+    };
+  };
+  return(status);
+
+} /* pkoc_switches */
+

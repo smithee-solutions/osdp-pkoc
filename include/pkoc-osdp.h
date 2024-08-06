@@ -25,8 +25,11 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 #define PKOC_STRING_MAX (1024)
 
-#define PKOC_SWITCH_HELP (1)
-#define PKOC_SWITCH_REQ_AUTH (2)
+#define PKOC_SWITCH_NOOP         (0)
+#define PKOC_SWITCH_HELP         (1)
+#define PKOC_SWITCH_REQ_AUTH     (2)
+#define PKOC_SWITCH_CARD_PRESENT (3)
+#define PKOC_SWITCH_NEXT_TRANSACTION (4)
 
 #define PKOC_STATE_ACTIVATED (1)
 #define PKOC_STATE_READING   (2)
@@ -44,7 +47,7 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 #define PKOC_TAG_CARD_PRESENT           (0xFC)
 #define PKOC_TAG_DIGITAL_SIGNATURE      (0x9E)
-#define PKOC_TAG_ERROR_VALUE            (0xFB)
+#define PKOC_TAG_ERROR                  (0xFB)
 #define PKOC_TAG_PROTOCOL_VERSION       (0x5C)
 #define PKOC_TAG_SYNC_SUPPORTED         (0xFA)
 #define PKOC_TAG_TRANSACTION_IDENTIFIER (0x4C)
@@ -76,8 +79,12 @@ typedef struct pkoc_context
 #define PKOC_MAX_PAYLOAD_VALUES (8)
 #define PAYLOAD_HAS_TRANSACTION_ID (0x0001)
 #define PAYLOAD_HAS_PROTOVER       (0x8000)
+#define PAYLOAD_HAS_XTN_SEQ        (0x4000)
+#define PAYLOAD_HAS_ERROR          (0x2000)
 #define IDX_XTN_ID       (0)
 #define IDX_PROTO_VER    (1)
+#define IDX_XTN_SEQ      (2)
+#define IDX_ERR          (3)
 typedef struct pkoc_payload_contents
 {
   unsigned char tag;

@@ -65,6 +65,8 @@ int main
             if (ctx->payload_mask & PAYLOAD_HAS_TRANSACTION_ID)
               status = update_pkoc_state(ctx);
 
+            system("/opt/osdp-conformance/bin/pkoc-reader --next-transaction");
+
             if (ctx->verbosity > 3)
               fprintf(ctx->log, "PKOC: MFG NEXT_TRANSACTION processed.\n");
           };

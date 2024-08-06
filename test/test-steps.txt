@@ -1,0 +1,18 @@
+
+start ACU, oui set, action routines installed
+start PD
+on ACU do next-transaction
+on PD do pkoc-reader --card-present
+ACU does auth request in response to card present
+PD does auth response
+
+
+next transaction is this command;
+
+{"command":"mfg","oui":"1A9021","command-id":"E3","command-specific-data":"0000000200024C00"}
+
+also do acurxsize
+also do keepactive
+
+
+

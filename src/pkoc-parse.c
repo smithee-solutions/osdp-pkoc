@@ -168,8 +168,10 @@ int pkoc_parse
       unprocessed = payload_length;
       while (!done)
       {
+fprintf(stderr, "index %ld. ", p-payload);
         tag = *p; p++; unprocessed --;
         length = *p; p++; unprocessed --;
+fprintf(stderr, " tag %02X length %02X\n", tag, length);
         switch (tag)
         {
         default:
@@ -179,12 +181,25 @@ int pkoc_parse
           parsed = 1;
           done = 1;
           break;
+        case PKOC_TAG_ERROR:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_ERROR;
+          contents [IDX_ERR].tag = tag;
+          contents [IDX_ERR].length = length;
+          memcpy(contents [IDX_ERR].value, p, length);
+          p = p + length;
+          unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Error Status %02X...\n",
+              contents [IDX_ERR].value [0]);
+          status = ST_OK;
+          break;
         case PKOC_TAG_TRANSACTION_IDENTIFIER:
           if (length EQUALS 0)
           {
             ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_TRANSACTION_ID;
             contents [IDX_XTN_ID].tag = tag;
             contents [IDX_XTN_ID].length = 0;
+            unprocessed = unprocessed - length;
             status = ST_OK;
           }
           else
@@ -220,6 +235,18 @@ int pkoc_parse
           if (ctx->verbosity > 3)
             fprintf(ctx->log, "Tag: Protocol Version %02X%02X\n",
               contents [IDX_PROTO_VER].value [0], contents [IDX_PROTO_VER].value [1]);
+          status = ST_OK;
+          break;
+        case PKOC_TAG_XTN_SEQ:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_XTN_SEQ;
+          contents [IDX_XTN_SEQ].tag = tag;
+          contents [IDX_XTN_SEQ].length = length;
+          memcpy(contents [IDX_XTN_SEQ].value, p, length);
+          p = p + length;
+          unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Transaction Sequence (l=%d) %02X...\n",
+              contents [IDX_XTN_SEQ].length, contents [IDX_XTN_SEQ].value [0]);
           status = ST_OK;
           break;
         };

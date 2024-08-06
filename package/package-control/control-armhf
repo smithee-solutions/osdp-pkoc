@@ -1,0 +1,10 @@
+Package: osdp-pkoc
+Version: 0.02
+Section: custom
+Priority: optional
+Architecture: armhf
+Essential: no
+Installed-Size: 1024
+Maintainer: github@smithee.solutions
+Description: Badge processsing tools
+

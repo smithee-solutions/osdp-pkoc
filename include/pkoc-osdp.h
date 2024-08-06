@@ -27,7 +27,7 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 #define PKOC_SWITCH_NOOP         (0)
 #define PKOC_SWITCH_HELP         (1)
-#define PKOC_SWITCH_REQ_AUTH     (2)
+#define PKOC_SWITCH_AUTH_REQUEST (2)
 #define PKOC_SWITCH_CARD_PRESENT (3)
 #define PKOC_SWITCH_NEXT_TRANSACTION (4)
 

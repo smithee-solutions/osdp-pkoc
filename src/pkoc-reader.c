@@ -18,7 +18,7 @@ struct option longopts [] =
   {"card-present", 0, &(my_context.action), PKOC_SWITCH_CARD_PRESENT},
   {"help", 0, &(my_context.action), PKOC_SWITCH_HELP},
   {"next-transaction", 0, &(my_context.action), PKOC_SWITCH_NEXT_TRANSACTION},
-  {"request-auth", 0, &(my_context.action), PKOC_SWITCH_REQ_AUTH},
+  {"request-auth", 0, &(my_context.action), PKOC_SWITCH_AUTH_REQUEST},
   {0, 0, 0, 0}
 };
 int status_opt;
@@ -57,7 +57,7 @@ int main
     break;
 
   case PKOC_SWITCH_AUTH_REQUEST:
-    fprintf(stderr, "Authentication Requested\n", command);
+    fprintf(stderr, "Authentication Requested\n");
     break;
 
   case PKOC_SWITCH_CARD_PRESENT:
@@ -142,7 +142,7 @@ int pkoc_switches
       break;
     case PKOC_SWITCH_NOOP:
       break;
-    case PKOC_SWITCH_REQ_AUTH:
+    case PKOC_SWITCH_AUTH_REQUEST:
       fprintf(stderr, "read a card.\n");
       *command = ctx->action;
       status = ST_OK;

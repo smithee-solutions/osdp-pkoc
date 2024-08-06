@@ -4,7 +4,7 @@ all:
 clean:
 	(cd src; make clean)
 	(cd package; make clean)
-	rm -rf opt
+	rm -rf opt *.deb
 
 package:	all
 	mkdir -p opt/osdp-conformance/etc/pkoc

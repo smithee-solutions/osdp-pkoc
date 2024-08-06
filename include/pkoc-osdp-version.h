@@ -1,1 +1,1 @@
-#define PKOC_OSDP_VERSION "0.00"
+#define PKOC_OSDP_VERSION "0.02"

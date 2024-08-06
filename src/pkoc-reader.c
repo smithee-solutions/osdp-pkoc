@@ -56,6 +56,10 @@ int main
     fprintf(stderr, "Unknown command (%d.)\n", command);
     break;
 
+  case PKOC_SWITCH_AUTH_REQUEST:
+    fprintf(stderr, "Authentication Requested\n", command);
+    break;
+
   case PKOC_SWITCH_CARD_PRESENT:
     strcpy(my_oui_string, PKOC_OUI_STRING);
     my_response_id = OSDP_PKOC_CARD_PRESENT;

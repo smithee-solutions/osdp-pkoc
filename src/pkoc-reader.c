@@ -119,6 +119,11 @@ int pkoc_switches
   while (!done)
   {
     status_opt = getopt_long(argc, argv, optstring, longopts, &longindex);
+    if (status_opt EQUALS -1)
+    {
+      done = 1;
+      ctx->action = PKOC_SWITCH_NOOP;
+    };
     switch(ctx->action)
     {
     case PKOC_SWITCH_CARD_PRESENT:
@@ -130,6 +135,8 @@ int pkoc_switches
       fprintf(stderr, "next transaction requested.\n");
       *command = ctx->action;
       status = ST_OK;
+      break;
+    case PKOC_SWITCH_NOOP:
       break;
     case PKOC_SWITCH_REQ_AUTH:
       fprintf(stderr, "read a card.\n");

@@ -168,7 +168,7 @@ int pkoc_parse
       unprocessed = payload_length;
       while (!done)
       {
-fprintf(stderr, "index %ld. ", p-payload);
+fprintf(stderr, "index %d. ", (int)(p-payload));
         tag = *p; p++; unprocessed --;
         length = *p; p++; unprocessed --;
 fprintf(stderr, " tag %02X length %02X\n", tag, length);

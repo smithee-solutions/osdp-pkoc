@@ -4,8 +4,11 @@
 
 #include <jansson.h>
 
+#include <openbadger-common.h>
+
 
 #include <pkoc-osdp.h>
+int pkoc_hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
 
 
 /*
@@ -61,6 +64,11 @@ int get_pkoc_settings
     if (json_is_string(value))
     {
       sscanf(json_string_value(value), "%d", &(ctx->verbosity));
+    };
+    value = json_object_get(parameters, "reader");
+    if (json_is_string(value))
+    {
+      sscanf(json_string_value(value), "%d", &(ctx->reader));
     };
   }
   else
@@ -119,6 +127,7 @@ int pkoc_parse
   int done;
   int length;
   OSDP_MULTIPART_HEADER *mph;
+  OB_CONTEXT ob_context;
   unsigned char *p;
   int parsed;
   unsigned char payload [OSDP_MAX_PACKET_SIZE];
@@ -129,7 +138,8 @@ int pkoc_parse
 
 
   parsed = 0;
-  status = hex_to_binary(ctx, payload, &payload_length);
+  ob_context.verbosity = ctx->verbosity;
+  status = pkoc_hex_to_binary(ctx, payload, &payload_length);
   p = payload;
   if (payload_length < 6) // 2+2+2 header in actual payload
     status = ST_PKOC_PAYLOAD_TOO_SHORT;
@@ -263,7 +273,7 @@ fprintf(stderr, " tag %02X length %02X\n", tag, length);
 } /* pkoc_parse */
 
 
-int hex_to_binary
+int pkoc_hex_to_binary
   (PKOC_CONTEXT *ctx,
   unsigned char *binary,
   int *length)

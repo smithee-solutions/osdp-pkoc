@@ -12,7 +12,9 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 } OSDP_MULTIPART_HEADER;
 
 
+#ifndef ST_OK
 #define ST_OK (0)
+#endif
 #define ST_PKOC_WRONG_OUI (1)
 #define ST_PKOC_MALFORMED_PAYLOAD (2)
 #define ST_PKOC_UNKNOWN_TAG       (3)
@@ -22,6 +24,7 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 #define ST_PKOC_OSDP_MISSING      (7)
 #define ST_PKOC_PAYLOAD_TOO_SHORT (8)
 #define ST_PKOC_UNKNOWN_SWITCH    (9)
+#define ST_PKOC_PCSC_TRANSMIT     (10)
 
 #define PKOC_STRING_MAX (1024)
 
@@ -33,6 +36,7 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 #define PKOC_STATE_ACTIVATED (1)
 #define PKOC_STATE_READING   (2)
+
 
 #define PKOC_OUI_STRING "1A9021"
 
@@ -57,15 +61,18 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 typedef struct pkoc_context
 {
-  int verbosity;
-  FILE *log;
   int action;
-  int current_state;
   unsigned char command_id;
-  unsigned char response_id;
+  int current_state;
+  FILE *log;
   unsigned int payload_mask;
+  unsigned char protocol_version [2];
+  int reader;
   unsigned char reader_identifier [32];
+  unsigned char response_id;
   unsigned char transaction_identifier [PKOC_TRANSACTION_ID_MAX]; 
+  int verbosity;
+
   unsigned char transaction_sequence [2]; //check
   unsigned char oui [3];
   unsigned char payload [256];
@@ -96,9 +103,11 @@ typedef struct pkoc_payload_contents
 int add_payload_element(PKOC_CONTEXT *ctx, char *command_buffer, int *command_buffer_length, unsigned char tag, unsigned char length, unsigned char *value);
 int get_pkoc_settings(PKOC_CONTEXT *ctx);
 int get_pkoc_state(PKOC_CONTEXT *ctx);
-int hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
+//int hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
+int init_smartcard(PKOC_CONTEXT *ctx);
 int match_oui(PKOC_CONTEXT *ctx);
 char * mph_in_hex(OSDP_MULTIPART_HEADER *mph);
+int pkoc_card_auth_request(PKOC_CONTEXT *ctx);
 int pkoc_parse(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 int send_osdp_command(PKOC_CONTEXT *ctx, char *destination, char *command_string);
 int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);

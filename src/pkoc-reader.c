@@ -1,5 +1,12 @@
 /*
   pkoc-reader - perform smartcard actions for PKOC OSDP ACU Operations
+
+  Usage:
+
+    pkoc-reader --card-present - check for a card and if found report
+      card-present to the ACU
+
+    pkoc-reader --request-auth - given auth request from ACU do auth request to card.
 */
 
 #include <stdio.h>
@@ -17,7 +24,6 @@ struct option longopts [] =
 {
   {"card-present", 0, &(my_context.action), PKOC_SWITCH_CARD_PRESENT},
   {"help", 0, &(my_context.action), PKOC_SWITCH_HELP},
-  {"next-transaction", 0, &(my_context.action), PKOC_SWITCH_NEXT_TRANSACTION},
   {"request-auth", 0, &(my_context.action), PKOC_SWITCH_AUTH_REQUEST},
   {0, 0, 0, 0}
 };
@@ -45,6 +51,7 @@ int main
   status = ST_OK;
   ctx = &my_context;
   ctx->log = stderr;
+  status = get_pkoc_settings(ctx);
   send_response = 0;
 
   fprintf(stderr, "pkoc-reader smartcard interface %s\n", PKOC_OSDP_VERSION);
@@ -58,11 +65,24 @@ int main
 
   case PKOC_SWITCH_AUTH_REQUEST:
     fprintf(stderr, "Authentication Requested\n");
+    status = init_smartcard(ctx);
+    if (status EQUALS ST_OK)
+    {
+      status = pkoc_card_auth_request(ctx);
+    };
+    if (status EQUALS ST_OK)
+    {
+fprintf(stderr, "DEBUG: auth request ok\n");
+    };
     break;
 
   case PKOC_SWITCH_CARD_PRESENT:
-    strcpy(my_oui_string, PKOC_OUI_STRING);
-    my_response_id = OSDP_PKOC_CARD_PRESENT;
+    status = init_smartcard(ctx);
+    if (status EQUALS ST_OK)
+    {
+fprintf(stderr, "DEBUG: Card was accessed.\n");
+      strcpy(my_oui_string, PKOC_OUI_STRING);
+      my_response_id = OSDP_PKOC_CARD_PRESENT;
 
     // response payload is
     // supported protocol version 5C 02 01 00
@@ -75,9 +95,14 @@ int main
     strcpy(tstring, mph_in_hex(&my_payload_header));
     strcat(my_payload_hex_string, tstring);
 
-    strcpy(tstring, "5C020100FD0100FB0100");
+    strcpy(tstring, "5C02");
+    strcat(my_payload_hex_string, tstring);
+    sprintf(tstring, "%02X%02X", ctx->protocol_version [0], ctx->protocol_version [1]);
+    strcat(my_payload_hex_string, tstring);
+    strcpy(tstring, "FD0100FB0100");
     strcat(my_payload_hex_string, tstring);
     send_response = 1;
+    };
     break;
 
   case PKOC_SWITCH_NEXT_TRANSACTION:
@@ -87,7 +112,6 @@ int main
 
 
 /*
-  initiate pcsc communications with card
   form mfgrep
   send mfgrep via osdp
 */
@@ -135,11 +159,6 @@ int pkoc_switches
       *command = ctx->action;
       status = ST_OK;
       break;
-    case PKOC_SWITCH_NEXT_TRANSACTION:
-      fprintf(stderr, "next transaction requested.\n");
-      *command = ctx->action;
-      status = ST_OK;
-      break;
     case PKOC_SWITCH_NOOP:
       break;
     case PKOC_SWITCH_AUTH_REQUEST:
@@ -148,6 +167,7 @@ int pkoc_switches
       status = ST_OK;
       break;
     case PKOC_SWITCH_HELP:
+      fprintf(stderr, "--card-present - attempt to detect card and report\n");
       fprintf(stderr, "--help - display this help text.\n");
       fprintf(stderr, "--request-auth - request card authenticate\n");
       *command = ctx->action;

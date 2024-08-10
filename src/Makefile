@@ -1,9 +1,9 @@
 PKOC_PROGRAMS=pkoc-init-pd pkoc-mfg pkoc-mfgrep pkoc-reader
 
 CC=clang
-CFLAGS=-c -g -I../include -Wall -Werror
+CFLAGS=-c -g -I../include -I/opt/openbadger/include -I/usr/include/PCSC -Wall -Werror
 LINK=clang
-LDFLAGS=-g -ljansson
+LDFLAGS=-g -ljansson -lpcsclite
 
 all:	${PKOC_PROGRAMS}
 	mkdir -p ../opt/osdp-conformance/bin
@@ -21,8 +21,10 @@ pkoc-mfg:	pkoc-mfg.o pkoc-parse.o Makefile
 pkoc-mfgrep:	pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o Makefile
 	${LINK} -o pkoc-mfgrep pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o ${LDFLAGS}
 
-pkoc-reader:	pkoc-reader.o pkoc-osdp-interface.o pkoc-parse.o Makefile
-	${LINK} -o pkoc-reader pkoc-reader.o pkoc-osdp-interface.o pkoc-parse.o ${LDFLAGS}
+pkoc-reader:	pkoc-reader.o pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o Makefile
+	${LINK} -o pkoc-reader pkoc-reader.o \
+	  pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o \
+	  -L/opt/openbadger/lib -lopenbadger ${LDFLAGS}
 
 pkoc-init-pd.o:	pkoc-init-pd.c
 	${CC} ${CFLAGS} pkoc-init-pd.c 
@@ -32,6 +34,9 @@ pkoc-mfg.o:	pkoc-mfg.c
 
 pkoc-mfgrep.o:	pkoc-mfgrep.c
 	${CC} ${CFLAGS} pkoc-mfgrep.c 
+
+pkoc-nfc.o:	pkoc-nfc.c
+	${CC} ${CFLAGS} -DALLOCATE_SELECT pkoc-nfc.c
 
 pkoc-osdp-interface.o:	pkoc-osdp-interface.c
 	${CC} ${CFLAGS} pkoc-osdp-interface.c

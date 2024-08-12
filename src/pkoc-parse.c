@@ -356,12 +356,18 @@ int unpack_command
 
 
 int update_pkoc_state
-  (PKOC_CONTEXT *ctx)
+  (PKOC_CONTEXT *ctx,
+  PKOC_PAYLOAD_CONTENTS contents [])
 {
   FILE *state;
 
   state = fopen("pkoc-state.json", "w");
-  fprintf(state, "{\"state\":\"%d\"}\n", ctx->current_state);
+  fprintf(state, "{\"_\":\"0\"");
+  fprintf(state, ", \"state\":\"%d\"", ctx->current_state);
+  fprintf(state, ", \"transaction-id\":\"%X%X\"}\n",
+    contents [IDX_XTN_ID].value [0],
+    contents [IDX_XTN_ID].value [1]);
+  fprintf(state, "}\n");
   fclose(state);
 
   return(ST_OK);

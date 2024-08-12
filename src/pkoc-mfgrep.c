@@ -65,7 +65,7 @@ int main
           {
             ctx->current_state = PKOC_STATE_READING;
             if (ctx->payload_mask & PAYLOAD_HAS_PROTOVER)
-              status = update_pkoc_state(ctx);
+              status = update_pkoc_state(ctx, contents);
             else
               status = ST_PKOC_NO_VERSION;
           };

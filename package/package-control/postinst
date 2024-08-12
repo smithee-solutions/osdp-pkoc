@@ -2,6 +2,6 @@
 
 mkdir -p /opt/osdp-conformance/bin
 mkdir -p /opt/osdp-conformance/etc
-cp /opt/osdp-conformance/etc/pkoc-actions/* /opt/osdp-conformance/actions
+cp /opt/osdp-conformance/etc/pkoc/osdp_* /opt/osdp-conformance/actions
 
 

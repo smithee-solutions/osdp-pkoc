@@ -1,12 +1,11 @@
 /*
   pkoc-mfg - Manufacture-Specific Command processor for PKOC
 
-
   standard input is a one-line JSON.  1 is pd address, 2 is the OUI,
   3 is the command, 4 is the payload.
 
   - assumes state is in pkoc-state.json
-  - assumes settings are in pkoc-settings.json
+  - assumes settings are in /opt/osdp-conformance/etc/pkoc-settings.json
   - assumes multipart header
 
   (C)2024 Smithee Solutions LLC
@@ -18,7 +17,6 @@
 #include <stdlib.h>
 
 #include <jansson.h>
-
 
 #include <pkoc-osdp.h>
 
@@ -63,12 +61,18 @@ int main
           {
             ctx->current_state = PKOC_STATE_ACTIVATED;
             if (ctx->payload_mask & PAYLOAD_HAS_TRANSACTION_ID)
-              status = update_pkoc_state(ctx);
-
-            system("/opt/osdp-conformance/bin/pkoc-reader --next-transaction");
-
-            if (ctx->verbosity > 3)
-              fprintf(ctx->log, "PKOC: MFG NEXT_TRANSACTION processed.\n");
+            {
+              if (contents [IDX_XTN_ID].length > 2)
+                fprintf(ctx->log, "PKOC MFG: Warning - transaction ID is %d. bytes\n", contents [IDX_XTN_ID].length);
+              if (ctx->verbosity > 3)
+              {
+                fprintf(ctx->log, "Panel provided transaction id (l=%d) %02X%02X...\n",
+                  contents [IDX_XTN_ID].length, contents [IDX_XTN_ID].value [0], contents [IDX_XTN_ID].value [1]);
+              };
+              status = update_pkoc_state(ctx, contents);
+              if (ctx->verbosity > 3)
+                fprintf(ctx->log, "PKOC: MFG NEXT_TRANSACTION processed.\n");
+            };
           };
           break;
         case OSDP_PKOC_AUTH_REQUEST:

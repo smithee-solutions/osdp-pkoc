@@ -111,5 +111,5 @@ int pkoc_card_auth_request(PKOC_CONTEXT *ctx);
 int pkoc_parse(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 int send_osdp_command(PKOC_CONTEXT *ctx, char *destination, char *command_string);
 int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);
-int update_pkoc_state(PKOC_CONTEXT *ctx);
+int update_pkoc_state(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 

@@ -71,6 +71,7 @@ typedef struct pkoc_context
   unsigned char reader_identifier [32];
   unsigned char response_id;
   unsigned char transaction_identifier [PKOC_TRANSACTION_ID_MAX]; 
+  int transaction_identifier_length;
   int verbosity;
 
   unsigned char transaction_sequence [2]; //check

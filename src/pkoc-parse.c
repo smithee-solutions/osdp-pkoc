@@ -80,6 +80,17 @@ int get_pkoc_settings
 } /* get_pkoc_settings */
 
 
+int get_pkoc_state
+  (PKOC_CONTEXT *ctx)
+{
+  //read pkoc-state.json
+fprintf(stderr, "DEBUG: stub get_pkoc_state\n");
+ctx->transaction_identifier_length = 16;
+memset(ctx->transaction_identifier, 0x17, 16);
+  return(0);
+}
+
+
 int match_oui
   (PKOC_CONTEXT *ctx)
 
@@ -358,7 +369,9 @@ int unpack_command
 int update_pkoc_state
   (PKOC_CONTEXT *ctx,
   PKOC_PAYLOAD_CONTENTS contents [])
-{
+
+{ /* update_pkoc_state */
+
   FILE *state;
 
   state = fopen("pkoc-state.json", "w");
@@ -371,5 +384,6 @@ int update_pkoc_state
   fclose(state);
 
   return(ST_OK);
-}
+
+} /* update_pkoc_state */
 

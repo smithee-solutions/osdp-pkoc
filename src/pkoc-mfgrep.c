@@ -128,11 +128,3 @@ fprintf(stderr, "DEBUG: directive is: %s\n", osdp_directive);
 
 } /* main for pkoc-mfgrep.c */
 
-
-int get_pkoc_state
-  (PKOC_CONTEXT *ctx)
-{
-  //read pkoc-state.json
-  return(0);
-}
-

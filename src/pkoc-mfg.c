@@ -76,7 +76,7 @@ int main
           };
           break;
         case OSDP_PKOC_AUTH_REQUEST:
-          system("/opt/osdp-conformance/bin/pkoc-reader --request-auth");
+          system("/opt/osdp-conformance/bin/pkoc-reader --auth-request");
           if (ctx->verbosity > 3)
             fprintf(ctx->log, "PKOC: MFG AUTH_REQUEST processed.\n");
           break;
@@ -94,12 +94,4 @@ int main
   return(status);
 
 } /* main for pkoc-mfg.c */
-
-
-int get_pkoc_state
-  (PKOC_CONTEXT *ctx)
-{
-  //read pkoc-state.json
-  return(0);
-}
 

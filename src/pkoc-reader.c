@@ -6,7 +6,7 @@
     pkoc-reader --card-present - check for a card and if found report
       card-present to the ACU
 
-    pkoc-reader --request-auth - given auth request from ACU do auth request to card.
+    pkoc-reader --auth-request - given auth request from ACU do auth request to card.  Assumes card is still present.
 */
 
 #include <stdio.h>
@@ -17,14 +17,14 @@
 #include <pkoc-osdp-version.h>
 
 int pkoc_switches(PKOC_CONTEXT *ctx, int *command, int argc, char *argv []);
+PKOC_CONTEXT my_context; // up here to support longopts initialization
 int longindex;
-PKOC_CONTEXT my_context;
 char optstring [1024];
 struct option longopts [] = 
 {
+  {"auth-request", 0, &(my_context.action), PKOC_SWITCH_AUTH_REQUEST},
   {"card-present", 0, &(my_context.action), PKOC_SWITCH_CARD_PRESENT},
   {"help", 0, &(my_context.action), PKOC_SWITCH_HELP},
-  {"request-auth", 0, &(my_context.action), PKOC_SWITCH_AUTH_REQUEST},
   {0, 0, 0, 0}
 };
 int status_opt;
@@ -52,6 +52,8 @@ int main
   ctx = &my_context;
   ctx->log = stderr;
   status = get_pkoc_settings(ctx);
+  if (status EQUALS ST_OK)
+    status = get_pkoc_state(ctx);
   send_response = 0;
 
   fprintf(stderr, "pkoc-reader smartcard interface %s\n", PKOC_OSDP_VERSION);
@@ -68,6 +70,7 @@ int main
     status = init_smartcard(ctx);
     if (status EQUALS ST_OK)
     {
+fprintf(stderr, "DEBUG: protocol version etc to context\n");
       status = pkoc_card_auth_request(ctx);
     };
     if (status EQUALS ST_OK)
@@ -80,7 +83,8 @@ fprintf(stderr, "DEBUG: auth request ok\n");
     status = init_smartcard(ctx);
     if (status EQUALS ST_OK)
     {
-fprintf(stderr, "DEBUG: Card was accessed.\n");
+      if (ctx->verbosity > 3)
+        fprintf(stderr, "pkoc-reader: Card was accessed.\n");
       strcpy(my_oui_string, PKOC_OUI_STRING);
       my_response_id = OSDP_PKOC_CARD_PRESENT;
 
@@ -110,12 +114,10 @@ fprintf(stderr, "DEBUG: Card was accessed.\n");
     break;
   };
 
-
-/*
-  form mfgrep
-  send mfgrep via osdp
-*/
-
+  /*
+    form mfgrep
+    send mfgrep via osdp
+  */
   if ((status EQUALS ST_OK) && (send_response))
   {
     sprintf(osdp_directive,
@@ -126,7 +128,8 @@ fprintf(stderr, "DEBUG: Card was accessed.\n");
     status = send_osdp_command(ctx, "/opt/osdp-conformance/run/PD/open-osdp-control", osdp_directive);
   };
   return(status);
-}
+
+} /* main for pkoc-reader */
   
 
 int pkoc_switches
@@ -155,25 +158,23 @@ int pkoc_switches
     switch(ctx->action)
     {
     case PKOC_SWITCH_CARD_PRESENT:
-      fprintf(stderr, "card present.\n");
+      fprintf(stderr, "PKOC: card present.\n");
       *command = ctx->action;
       status = ST_OK;
       break;
     case PKOC_SWITCH_NOOP:
       break;
     case PKOC_SWITCH_AUTH_REQUEST:
-      fprintf(stderr, "read a card.\n");
+      fprintf(stderr, "PKOC: requesting authentication from card.\n");
       *command = ctx->action;
       status = ST_OK;
       break;
     case PKOC_SWITCH_HELP:
+    default:
       fprintf(stderr, "--card-present - attempt to detect card and report\n");
       fprintf(stderr, "--help - display this help text.\n");
-      fprintf(stderr, "--request-auth - request card authenticate\n");
+      fprintf(stderr, "--auth-request - request card authenticate\n");
       *command = ctx->action;
-      status = ST_OK;
-      break;
-    default:
       status = ST_PKOC_UNKNOWN_SWITCH;
       break;
     };

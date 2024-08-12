@@ -3,7 +3,10 @@ PKOC_PROGRAMS=pkoc-init-pd pkoc-mfg pkoc-mfgrep pkoc-reader
 CC=clang
 CFLAGS=-c -g -I../include -I/opt/openbadger/include -I/usr/include/PCSC -Wall -Werror
 LINK=clang
-LDFLAGS=-g -ljansson -lpcsclite
+LDFLAGS=-g -ljansson -lpcsclite /opt/openbadger/lib/libeac-crypto_cyclone.a /opt/crypto/lib/libcyclone.a /opt/openbadger/lib/libopenbadger.a
+LDFLAGS=-g \
+  -L/opt/openbadger/lib -leac-crypto_cyclone -leac-encode -lopenbadger -L /opt/crypto/lib -lcyclone \
+  -ljansson -lpcsclite
 
 all:	${PKOC_PROGRAMS}
 	mkdir -p ../opt/osdp-conformance/bin
@@ -23,8 +26,7 @@ pkoc-mfgrep:	pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o Makefile
 
 pkoc-reader:	pkoc-reader.o pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o Makefile
 	${LINK} -o pkoc-reader pkoc-reader.o \
-	  pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o \
-	  -L/opt/openbadger/lib -lopenbadger ${LDFLAGS}
+	  pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o ${LDFLAGS}
 
 pkoc-init-pd.o:	pkoc-init-pd.c
 	${CC} ${CFLAGS} pkoc-init-pd.c 

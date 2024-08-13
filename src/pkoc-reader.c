@@ -43,6 +43,7 @@ int main
   char my_payload_hex_string [1024];
   unsigned char my_response_id;
   char osdp_directive [8192];
+  int payload_byte_length;
   int send_response;
   char tstring [3072];
   int status;
@@ -75,7 +76,31 @@ fprintf(stderr, "DEBUG: protocol version etc to context\n");
     };
     if (status EQUALS ST_OK)
     {
-fprintf(stderr, "DEBUG: auth request ok\n");
+      strcpy(my_oui_string, PKOC_OUI_STRING);
+      my_response_id = OSDP_PKOC_AUTH_RESPONSE;
+      // response payload is
+
+      strcat(my_payload_hex_string, tstring);
+      sprintf(tstring, "%02X", PKOC_TAG_UNCOMP_PUBLIC_KEY);
+      strcat(my_payload_hex_string, tstring);
+      sprintf(tstring, "%02X", ctx->public_key_length);
+      strcat(my_payload_hex_string, tstring);
+      sprintf(tstring, "%02X", PKOC_TAG_DIGITAL_SIGNATURE);
+      strcat(my_payload_hex_string, tstring);
+      sprintf(tstring, "%02X", ctx->signature_length);
+      strcat(my_payload_hex_string, tstring);
+      payload_byte_length = strlen(my_payload_hex_string)/2;
+
+      // pre-pend the header now that the length is known.
+      strcpy(tstring, my_payload_hex_string);
+      my_payload_hex_string [0] = 0;
+      my_payload_header.offset = 0;
+      my_payload_header.fragment_length = payload_byte_length;
+      my_payload_header.total_length = my_payload_header.fragment_length;
+      strcpy(my_payload_hex_string, mph_in_hex(&my_payload_header));
+      strcat(my_payload_hex_string, tstring);
+
+      send_response = 1;
     };
     break;
 

@@ -4,6 +4,7 @@
 
 #include <jansson.h>
 
+#include <eac-encode.h>
 #include <openbadger-common.h>
 
 
@@ -244,7 +245,7 @@ fprintf(stderr, " tag %02X length %02X\n", tag, length);
           status = ST_OK;
           break;
         case PKOC_TAG_UNCOMP_PUBLIC_KEY:
-          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PUBLIC_KEY;
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PUBKEY;
           {
             contents [IDX_PUBKEY].tag = tag;
             contents [IDX_PUBKEY].length = length;
@@ -414,4 +415,118 @@ int update_pkoc_state
   return(ST_OK);
 
 } /* update_pkoc_state */
+
+
+int validate_signature
+  (PKOC_CONTEXT *ctx, 
+  unsigned char *public_key_bits)
+
+{ /* validate_signature */
+
+  EAC_ENCODE_CONTEXT crypto_context;
+  unsigned char digest [EAC_CRYPTO_SHA256_DIGEST_SIZE];
+  int digest_lth;
+  EAC_ENCODE_OBJECT digest_object;
+  OB_CONTEXT ob_context;
+  unsigned char pkoc_signature [EAC_CRYPTO_MAX_DER];
+  unsigned char pubkey_der [8192];
+  int pubkey_der_length;
+  EAC_ENCODE_OBJECT public_key;
+  EAC_ENCODE_OBJECT signature_info;
+  EAC_ENCODE_OBJECT signature_object;
+  int status;
+  unsigned char whole_sig [16384];
+  int whole_sig_lth;
+
+
+  status = ST_OK;
+  memset(&ob_context, 0, sizeof(ob_context));
+  ob_context.verbosity = ctx->verbosity;
+  memset(&crypto_context, 0, sizeof(crypto_context));
+  crypto_context.verbosity = ctx->verbosity;
+  crypto_context.eac_log = eac_log;
+  memset(public_key_bits, 0, 65);
+  whole_sig_lth = 0;
+  if (status EQUALS ST_OK)
+  {
+    status = eac_encode_allocate_object(&crypto_context, &public_key);
+    if (status != ST_OK)
+      fprintf(ctx->log, "Error: object alloc (public_key) (%d.)\n",
+        status);
+  };
+  if (status EQUALS ST_OK)
+  {
+int public_key_length;
+int signature_length;
+public_key_length = 64;
+signature_length = 64;
+fprintf(stderr, "DEBUG: check validate lth sig lth pubkey\n");
+    fprintf(stderr, "Public Key:\n");
+    ob_dump_buffer (&ob_context, ctx->public_key, public_key_length, 0);
+    fprintf(stderr, "Signature:\n");
+    ob_dump_buffer (&ob_context, ctx->signature, signature_length, 0);
+
+    // output a DER-formatted copy of the public key.
+    pubkey_der_length = sizeof(pubkey_der);
+    status = initialize_pubkey_DER(ctx, ctx->public_key, public_key_length, pubkey_der, &pubkey_der_length);
+  };
+  if (status EQUALS ST_OK)
+  {
+    fprintf(stderr, "DER Encoded Public Key:\n");
+    ob_dump_buffer(&ob_context, pubkey_der, pubkey_der_length, 0);
+  };
+  if (status EQUALS ST_OK)
+  {
+    status = eac_crypto_digest_init(&crypto_context, &digest_object);
+  };
+  if (status EQUALS ST_OK)
+  {
+    // transaction identifier was kept in the pkoc state.
+
+    status = eac_crypto_digest_update(&crypto_context, &digest_object, ctx->transaction_identifier, ctx->transaction_identifier_length);
+  };
+  if (status EQUALS ST_OK)
+     status = eac_crypto_digest_finish(&crypto_context, &digest_object, digest, &digest_lth);
+  if (status EQUALS ST_OK)
+  {
+    if (crypto_context.verbosity > 3)
+    {
+      fprintf(stderr, "digest...\n");
+      ob_dump_buffer(&ob_context, digest, digest_lth, 0);
+    };
+  };
+
+  if (status EQUALS ST_OK)
+  {
+    public_key.key_parameters [0] = EAC_CRYPTO_EC;
+    public_key.key_parameters [1] = EAC_KEY_EC_CURVE_SECP256R1;
+    strcpy(public_key.description, DESC_EC256);
+
+    status = eac_crypto_pubkey_init(&crypto_context, &public_key, pubkey_der, pubkey_der_length);
+  };
+  if (status EQUALS ST_OK)
+  {
+    if (ctx->verbosity > 3)
+    {
+      if (strlen(public_key.description) > 0)
+      {
+        fprintf(ctx->log, "public key init status %d public key type is %s\n", status, public_key.description);
+      };
+    };
+  };
+  if (status EQUALS ST_OK)
+    status = initialize_signature_DER(ctx, pkoc_signature, 32, pkoc_signature+32, 32, whole_sig, &whole_sig_lth);
+  if (status EQUALS ST_OK)
+  {
+    memcpy(signature_object.encoded, whole_sig, whole_sig_lth);
+    signature_object.enc_lth = whole_sig_lth;
+    status = eac_crypto_verify_signature_ex(&crypto_context,
+      &public_key, digest, digest_lth,
+      &signature_object, &signature_info);
+    if (status EQUALS ST_OK)
+      fprintf(stderr, "***SIGNATURE VALID***\n");
+  };
+  return(status);
+
+} /* validate_signature */
 

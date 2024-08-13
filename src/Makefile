@@ -18,11 +18,11 @@ clean:
 pkoc-init-pd:	pkoc-init-pd.o Makefile
 	${LINK} -o pkoc-init-pd pkoc-init-pd.o ${LDFLAGS}
 
-pkoc-mfg:	pkoc-mfg.o pkoc-parse.o Makefile
-	${LINK} -o pkoc-mfg pkoc-mfg.o pkoc-parse.o ${LDFLAGS}
+pkoc-mfg:	pkoc-mfg.o pkoc-nfc.o pkoc-parse.o Makefile
+	${LINK} -o pkoc-mfg pkoc-mfg.o pkoc-nfc.o pkoc-parse.o ${LDFLAGS}
 
-pkoc-mfgrep:	pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o Makefile
-	${LINK} -o pkoc-mfgrep pkoc-mfgrep.o pkoc-parse.o pkoc-osdp-interface.o ${LDFLAGS}
+pkoc-mfgrep:	pkoc-mfgrep.o pkoc-nfc.o pkoc-parse.o pkoc-osdp-interface.o Makefile
+	${LINK} -o pkoc-mfgrep pkoc-mfgrep.o pkoc-nfc.o pkoc-parse.o pkoc-osdp-interface.o ${LDFLAGS}
 
 pkoc-reader:	pkoc-reader.o pkoc-nfc.o pkoc-osdp-interface.o pkoc-parse.o Makefile
 	${LINK} -o pkoc-reader pkoc-reader.o \

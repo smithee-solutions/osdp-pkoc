@@ -69,10 +69,12 @@ typedef struct pkoc_context
   unsigned int payload_mask;
   unsigned char protocol_version [2];
   unsigned char public_key [65];
+  int public_key_length;
   int reader;
   unsigned char reader_identifier [32];
   unsigned char response_id;
   unsigned char signature [65];
+  int signature_length;
   unsigned char transaction_identifier [PKOC_TRANSACTION_ID_MAX]; 
   int transaction_identifier_length;
   int verbosity;
@@ -113,6 +115,10 @@ int get_pkoc_settings(PKOC_CONTEXT *ctx);
 int get_pkoc_state(PKOC_CONTEXT *ctx);
 //int hex_to_binary(PKOC_CONTEXT *ctx, unsigned char *binary, int *length);
 int init_smartcard(PKOC_CONTEXT *ctx);
+int initialize_pubkey_DER(PKOC_CONTEXT *ctx, unsigned char *key_buffer, int kblth,
+  unsigned char *marshalled_DER, int *marshalled_length);
+int initialize_signature_DER(PKOC_CONTEXT *ctx, unsigned char *part_1, int part1lth,
+  unsigned char *part_2, int part2lth, unsigned char *marshalled_signature, int *whole_sig_lth);
 int match_oui(PKOC_CONTEXT *ctx);
 char * mph_in_hex(OSDP_MULTIPART_HEADER *mph);
 int pkoc_card_auth_request(PKOC_CONTEXT *ctx);

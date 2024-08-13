@@ -33,10 +33,6 @@ unsigned char ec_signature_der_skeleton_2 [] =
 // then 32 of part 2
 };
 
-int initialize_pubkey_DER(OB_CONTEXT *ctx, unsigned char *key_buffer, int kblth,
-  unsigned char *marshalled_DER, int *marshalled_length);
-int initialize_signature_DER(OB_CONTEXT *ctx, unsigned char *part_1, int part1lth,
-  unsigned char *part_2, int part2lth, unsigned char *marshalled_signature, int *whole_sig_lth);
 OB_RDRCTX pcsc_reader_context;
 
 
@@ -114,9 +110,6 @@ int pkoc_card_auth_request
 { /* pkoc_card_auth_request */
 
   EAC_ENCODE_CONTEXT crypto_context;
-  unsigned char digest [EAC_CRYPTO_SHA256_DIGEST_SIZE];
-  int digest_lth;
-  EAC_ENCODE_OBJECT digest_object;
   DWORD dwRecvLength;
   int index_lc;
   unsigned char msg_cla;
@@ -130,18 +123,12 @@ int pkoc_card_auth_request
   int payload_size;
   BYTE pbRecvBuffer [2*OB_7816_APDU_PAYLOAD_MAX];
   unsigned char pkoc_signature [EAC_CRYPTO_MAX_DER];
-  unsigned char pubkey_der [8192];
-  int pubkey_der_length;
-  EAC_ENCODE_OBJECT public_key;
-  EAC_ENCODE_OBJECT signature_info;
+//  EAC_ENCODE_OBJECT public_key;
   int remainder;
-  EAC_ENCODE_OBJECT signature_object;
   unsigned char smartcard_command [OB_7816_BUFFER_MAX];
   int smartcard_command_length;
   int status;
   LONG status_pcsc;
-  unsigned char whole_sig [16384];
-  int whole_sig_lth;
 unsigned char reader_key_identifier [OB_PKOC_READER_KEY_IDENTIFIER_LENGTH];
 unsigned char site_key_identifier [OB_PKOC_SITE_KEY_IDENTIFIER_LENGTH];
 
@@ -248,12 +235,9 @@ fprintf(stderr,"DEBUG: site key identifier\n");
       p++;
       remainder = remainder - 1;
 
-      status = eac_encode_allocate_object(&crypto_context, &public_key);
-      if (status != ST_OK)
-        fprintf(ctx->log, "Error: object alloc (public_key) (%d.)\n",
-          status);
-      memcpy(public_key.encoded, p, payload_size);
-      public_key.enc_lth = payload_size;
+      memcpy(ctx->public_key, p, payload_size);
+      ctx->public_key_length = payload_size;
+
       p = p + payload_size;
       remainder = remainder - payload_size;
     };
@@ -265,7 +249,9 @@ fprintf(stderr,"DEBUG: site key identifier\n");
       p++;
       remainder--;
 
-      memcpy(pkoc_signature, p, payload_size);
+      memcpy(ctx->signature, p, payload_size);
+      ctx->signature_length = payload_size;
+
       p = p + payload_size;
       remainder = remainder - payload_size;
     };
@@ -277,94 +263,24 @@ fprintf(stderr,"DEBUG: site key identifier\n");
       p++;
       remainder--;
 
-      memcpy(public_key.encoded, p, payload_size);
-      public_key.enc_lth = payload_size;
+      memcpy(ctx->public_key, p, payload_size);
+      ctx->public_key_length = payload_size;
+
       p = p + payload_size;
       remainder = remainder - payload_size;
     };
     fprintf(stderr, "Public Key:\n");
-    ob_dump_buffer (&ob_context, public_key.encoded, public_key.enc_lth, 0);
+    ob_dump_buffer (&ob_context, ctx->public_key, ctx->public_key_length, 0);
     fprintf(stderr, "Signature:\n");
     ob_dump_buffer (&ob_context, pkoc_signature, 64, 0);
-
-    // output a DER-formatted copy of the public key.
-    pubkey_der_length = sizeof(pubkey_der);
-    status = initialize_pubkey_DER(&ob_context, public_key.encoded, public_key.enc_lth, pubkey_der, &pubkey_der_length);
-    if (status EQUALS ST_OK)
-    {
-      fprintf(stderr, "DER Encoded Public Key:\n");
-      ob_dump_buffer(&ob_context, pubkey_der, pubkey_der_length, 0);
-    };
   };
-  if (status EQUALS ST_OK)
-  {
-    // output a DER-formatted copy of the signature.
-    status = initialize_signature_DER(&ob_context, pkoc_signature, 32, pkoc_signature+32, 32, whole_sig, &whole_sig_lth);
-    if (status EQUALS ST_OK)
-      fprintf(stderr, "file ec-sig.der created\n");
-  };
-  if (status EQUALS ST_OK)
-  {
-    fprintf(stderr, "DER Encoded Signature:\n");
-      ob_dump_buffer(&ob_context, whole_sig, whole_sig_lth, 0);
-  };
-
-  if (status EQUALS ST_OK)
-  {
-    status = eac_crypto_digest_init(&crypto_context, &digest_object);
-  };
-  if (status EQUALS ST_OK)
-  {
-    status = eac_crypto_digest_update(&crypto_context, &digest_object, ctx->transaction_identifier, ctx->transaction_identifier_length);
-  };
-  if (status EQUALS ST_OK)
-     status = eac_crypto_digest_finish(&crypto_context, &digest_object, digest, &digest_lth);
-  if (status EQUALS ST_OK)
-  {
-    if (crypto_context.verbosity > 3)
-    {
-      fprintf(stderr, "digest...\n");
-      ob_dump_buffer(&ob_context, digest, digest_lth, 0);
-    };
-  };
-  if (digest_object.internal)
-      free(digest_object.internal);
-
-  if (status EQUALS ST_OK)
-  {
-    public_key.key_parameters [0] = EAC_CRYPTO_EC;
-    public_key.key_parameters [1] = EAC_KEY_EC_CURVE_SECP256R1;
-
-    status = eac_crypto_pubkey_init(&crypto_context, &public_key, pubkey_der, pubkey_der_length);
-  };
-  if (status EQUALS ST_OK)
-  {
-    if (ctx->verbosity > 3)
-    {
-      if (strlen(public_key.description) > 0)
-      {
-        fprintf(ctx->log, "public key init status %d public key type is %s\n", status, public_key.description);
-      };
-    };
-  };
-  if (status EQUALS ST_OK)
-  {
-    memcpy(signature_object.encoded, whole_sig, whole_sig_lth);
-    signature_object.enc_lth = whole_sig_lth;
-    status = eac_crypto_verify_signature_ex(&crypto_context,
-      &public_key, digest, digest_lth,
-      &signature_object, &signature_info);
-    if (status EQUALS ST_OK)
-      fprintf(stderr, "***SIGNATURE VALID***\n");
-  };
-
   return(status);
 
 } /* pkoc_card_auth_request */
 
 
 int initialize_pubkey_DER
-  (OB_CONTEXT *ctx,
+  (PKOC_CONTEXT *ctx,
   unsigned char *key_buffer,
   int kblth,
   unsigned char *marshalled_DER,
@@ -389,7 +305,7 @@ int initialize_pubkey_DER
 
 
 int initialize_signature_DER
-  (OB_CONTEXT *ctx,
+  (PKOC_CONTEXT *ctx,
   unsigned char *part_1,
   int part1lth,
   unsigned char *part_2,

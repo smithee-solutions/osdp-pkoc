@@ -36,6 +36,7 @@ typedef struct __attribute__((packed)) osdp_multipart_header
 
 #define PKOC_STATE_ACTIVATED (1)
 #define PKOC_STATE_READING   (2)
+#define PKOC_STATE_AUTH_CHECK (3)
 
 
 #define PKOC_OUI_STRING "1A9021"
@@ -67,9 +68,11 @@ typedef struct pkoc_context
   FILE *log;
   unsigned int payload_mask;
   unsigned char protocol_version [2];
+  unsigned char public_key [65];
   int reader;
   unsigned char reader_identifier [32];
   unsigned char response_id;
+  unsigned char signature [65];
   unsigned char transaction_identifier [PKOC_TRANSACTION_ID_MAX]; 
   int transaction_identifier_length;
   int verbosity;
@@ -89,10 +92,14 @@ typedef struct pkoc_context
 #define PAYLOAD_HAS_PROTOVER       (0x8000)
 #define PAYLOAD_HAS_XTN_SEQ        (0x4000)
 #define PAYLOAD_HAS_ERROR          (0x2000)
+#define PAYLOAD_HAS_PUBKEY         (0x1000)
+#define PAYLOAD_HAS_SIGNATURE      (0x0800)
 #define IDX_XTN_ID       (0)
 #define IDX_PROTO_VER    (1)
 #define IDX_XTN_SEQ      (2)
 #define IDX_ERR          (3)
+#define IDX_PUBKEY       (4)
+#define IDX_SIG          (5)
 typedef struct pkoc_payload_contents
 {
   unsigned char tag;
@@ -113,4 +120,5 @@ int pkoc_parse(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
 int send_osdp_command(PKOC_CONTEXT *ctx, char *destination, char *command_string);
 int unpack_command(PKOC_CONTEXT *ctx, int argc, char *argv []);
 int update_pkoc_state(PKOC_CONTEXT *ctx, PKOC_PAYLOAD_CONTENTS contents []);
+int validate_signature(PKOC_CONTEXT *ctx, unsigned char *public_key_bits);
 

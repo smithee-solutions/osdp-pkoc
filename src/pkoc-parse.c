@@ -214,6 +214,49 @@ fprintf(stderr, " tag %02X length %02X\n", tag, length);
               contents [IDX_ERR].value [0]);
           status = ST_OK;
           break;
+        case PKOC_TAG_PROTOCOL_VERSION:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
+          if (length EQUALS 2)
+          {
+            contents [IDX_PROTO_VER].tag = tag;
+            contents [IDX_PROTO_VER].length = length;
+            memcpy(contents [IDX_PROTO_VER].value, p, length);
+          };
+          p = p + length;
+          unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Protocol Version %02X%02X\n",
+              contents [IDX_PROTO_VER].value [0], contents [IDX_PROTO_VER].value [1]);
+          status = ST_OK;
+          break;
+        case PKOC_TAG_DIGITAL_SIGNATURE:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_SIGNATURE;
+          {
+            contents [IDX_SIG].tag = tag;
+            contents [IDX_SIG].length = length;
+            memcpy(contents [IDX_SIG].value, p, length);
+          };
+          p = p + length;
+          unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Signature %02X...\n",
+              contents [IDX_SIG].value [0]);
+          status = ST_OK;
+          break;
+        case PKOC_TAG_UNCOMP_PUBLIC_KEY:
+          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PUBLIC_KEY;
+          {
+            contents [IDX_PUBKEY].tag = tag;
+            contents [IDX_PUBKEY].length = length;
+            memcpy(contents [IDX_PUBKEY].value, p, length);
+          };
+          p = p + length;
+          unprocessed = unprocessed - length;
+          if (ctx->verbosity > 3)
+            fprintf(ctx->log, "Tag: Public Key %02X...\n",
+              contents [IDX_PUBKEY].value [0]);
+          status = ST_OK;
+          break;
         case PKOC_TAG_TRANSACTION_IDENTIFIER:
           if (length EQUALS 0)
           {
@@ -242,21 +285,6 @@ fprintf(stderr, " tag %02X length %02X\n", tag, length);
             if (ctx->verbosity > 3)
               fprintf(ctx->log, "Tag: Transaction ID (l=%d.) %02X...\n",
                 contents [IDX_XTN_ID].length, contents [IDX_XTN_ID].value [0]);
-          break;
-        case PKOC_TAG_PROTOCOL_VERSION:
-          ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_PROTOVER;
-          if (length EQUALS 2)
-          {
-            contents [IDX_PROTO_VER].tag = tag;
-            contents [IDX_PROTO_VER].length = length;
-            memcpy(contents [IDX_PROTO_VER].value, p, length);
-          };
-          p = p + length;
-          unprocessed = unprocessed - length;
-          if (ctx->verbosity > 3)
-            fprintf(ctx->log, "Tag: Protocol Version %02X%02X\n",
-              contents [IDX_PROTO_VER].value [0], contents [IDX_PROTO_VER].value [1]);
-          status = ST_OK;
           break;
         case PKOC_TAG_XTN_SEQ:
           ctx->payload_mask = ctx->payload_mask | PAYLOAD_HAS_XTN_SEQ;

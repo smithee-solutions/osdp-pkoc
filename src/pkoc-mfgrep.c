@@ -30,12 +30,13 @@ int main
 
   char command_buffer [8192];
   int command_buffer_length;
+  PKOC_PAYLOAD_CONTENTS contents [PKOC_MAX_PAYLOAD_VALUES];
   PKOC_CONTEXT *ctx;
   int i;
   PKOC_CONTEXT my_context;
   char osdp_directive [8192];
+  unsigned char public_key_bits [65];
   int status;
-  PKOC_PAYLOAD_CONTENTS contents [PKOC_MAX_PAYLOAD_VALUES];
 
 
   ctx = &my_context;
@@ -58,6 +59,32 @@ int main
         {
         default:
           fprintf(ctx->log, "Unknown mfg response ID (%02X)\n", ctx->response_id);
+          break;
+        case OSDP_PKOC_AUTH_RESPONSE:
+          ctx->current_state = PKOC_STATE_AUTH_CHECK;
+          status = pkoc_parse(ctx, contents);
+          if ((status EQUALS ST_OK) && (ctx->payload_mask & PAYLOAD_HAS_PUBKEY))
+          {
+            memcpy(ctx->public_key, contents [IDX_PUBKEY].value, contents [IDX_PUBKEY].length);
+          };
+          if ((status EQUALS ST_OK) && (ctx->payload_mask & PAYLOAD_HAS_SIGNATURE))
+          {
+            memcpy(ctx->signature, contents [IDX_SIG].value, contents [IDX_SIG].length);
+          };
+          if (status EQUALS ST_OK)
+          {
+            status = validate_signature(ctx, public_key_bits);
+            if (status EQUALS ST_OK)
+            {
+              int i;
+              int first_bit_index;
+              fprintf(stderr, "PKOC: 64 bit card value: ");
+              first_bit_index = (256/8) - (64/8);
+              for (i=first_bit_index; i<first_bit_index+(64/8); i++)
+                fprintf(stderr, "%02X", public_key_bits [i]);
+              fprintf(stderr, "\n");
+            };
+          };
           break;
         case OSDP_PKOC_CARD_PRESENT:
           status = pkoc_parse(ctx, contents);

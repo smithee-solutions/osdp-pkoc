@@ -122,8 +122,6 @@ int pkoc_card_auth_request
   unsigned char *p;
   int payload_size;
   BYTE pbRecvBuffer [2*OB_7816_APDU_PAYLOAD_MAX];
-  unsigned char pkoc_signature [EAC_CRYPTO_MAX_DER];
-//  EAC_ENCODE_OBJECT public_key;
   int remainder;
   unsigned char smartcard_command [OB_7816_BUFFER_MAX];
   int smartcard_command_length;
@@ -272,7 +270,7 @@ fprintf(stderr,"DEBUG: site key identifier\n");
     fprintf(stderr, "Public Key:\n");
     ob_dump_buffer (&ob_context, ctx->public_key, ctx->public_key_length, 0);
     fprintf(stderr, "Signature:\n");
-    ob_dump_buffer (&ob_context, pkoc_signature, 64, 0);
+    ob_dump_buffer (&ob_context, ctx->signature, ctx->signature_length, 0);
   };
   return(status);
 

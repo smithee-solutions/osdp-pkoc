@@ -38,6 +38,7 @@ int main
 
   int command;
   PKOC_CONTEXT *ctx;
+  int i;
   char my_oui_string [1024];
   OSDP_MULTIPART_HEADER my_payload_header;
   char my_payload_hex_string [1024];
@@ -85,10 +86,22 @@ fprintf(stderr, "DEBUG: protocol version etc to context\n");
       strcat(my_payload_hex_string, tstring);
       sprintf(tstring, "%02X", ctx->public_key_length);
       strcat(my_payload_hex_string, tstring);
+      for (i=0; i<ctx->public_key_length; i++)
+      {
+        sprintf(tstring, "%02x", ctx->public_key [i]);
+        strcat(my_payload_hex_string, tstring);
+      };
+
       sprintf(tstring, "%02X", PKOC_TAG_DIGITAL_SIGNATURE);
       strcat(my_payload_hex_string, tstring);
       sprintf(tstring, "%02X", ctx->signature_length);
       strcat(my_payload_hex_string, tstring);
+      for (i=0; i<ctx->signature_length; i++)
+      {
+        sprintf(tstring, "%02x", ctx->signature [i]);
+        strcat(my_payload_hex_string, tstring);
+      };
+
       payload_byte_length = strlen(my_payload_hex_string)/2;
 
       // pre-pend the header now that the length is known.

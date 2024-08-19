@@ -439,6 +439,8 @@ int validate_signature
   int whole_sig_lth;
 
 
+  if (ctx->verbosity > 3)
+    fprintf(stderr, "validate_signature: top\n");
   status = ST_OK;
   memset(&ob_context, 0, sizeof(ob_context));
   ob_context.verbosity = ctx->verbosity;
@@ -447,6 +449,9 @@ int validate_signature
   crypto_context.eac_log = eac_log;
   memset(public_key_bits, 0, 65);
   whole_sig_lth = 0;
+
+// clean up 65
+
   if (status EQUALS ST_OK)
   {
     status = eac_encode_allocate_object(&crypto_context, &public_key);
@@ -460,7 +465,7 @@ int public_key_length;
 int signature_length;
 public_key_length = 64;
 signature_length = 64;
-fprintf(stderr, "DEBUG: check validate lth sig lth pubkey\n");
+fprintf(stderr, "DEBUG: check validate lth sig lth pubkey (%d ?)\n", public_key_length);
     fprintf(stderr, "Public Key:\n");
     ob_dump_buffer (&ob_context, ctx->public_key, public_key_length, 0);
     fprintf(stderr, "Signature:\n");
@@ -469,6 +474,7 @@ fprintf(stderr, "DEBUG: check validate lth sig lth pubkey\n");
     // output a DER-formatted copy of the public key.
     pubkey_der_length = sizeof(pubkey_der);
     status = initialize_pubkey_DER(ctx, ctx->public_key, public_key_length, pubkey_der, &pubkey_der_length);
+fprintf(stderr, "DEBUG: shoulda been proper length\n");
   };
   if (status EQUALS ST_OK)
   {
@@ -526,6 +532,8 @@ fprintf(stderr, "DEBUG: check validate lth sig lth pubkey\n");
     if (status EQUALS ST_OK)
       fprintf(stderr, "***SIGNATURE VALID***\n");
   };
+  if (ctx->verbosity > 3)
+    fprintf(stderr, "validate_signature: exit, status %d\n", status);
   return(status);
 
 } /* validate_signature */

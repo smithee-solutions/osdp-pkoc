@@ -1,27 +1,5 @@
-```
-// program pkoc-init-od
-// program pkoc mfgrep action routine
-// program pkoc-reader
-
-
-the scenario is this:
-
-acu sends next-transaction
-pd initiates card read
-pd sends card present
-acu send auth request
-pd interacts with card to fulfill auth request
-pd sends auth response
-acu validates auth response
-acu declares card read.
-```
-
-
-
-\newpage {}
-
-```
-   Copyright [2024] Smithee Solutions LLC
+/*
+   Copyright 2024 Smithee Solutions LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,5 +12,5 @@ acu declares card read.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-```
+*/
 

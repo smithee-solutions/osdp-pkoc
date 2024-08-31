@@ -38,7 +38,7 @@ int main
 
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
-  ctx->log = fopen("/opt/osdp/log/osdp-pkoc-pd.log", "w");
+  ctx->log = fopen("/opt/osdp/log/osdp-pkoc-pd.log", "a");
   if (ctx->log EQUALS NULL)
   {
     ctx->log = stderr;

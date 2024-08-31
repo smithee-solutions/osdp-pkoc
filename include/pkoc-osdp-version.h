@@ -14,4 +14,4 @@
    limitations under the License.
 */
 
-#define PKOC_OSDP_VERSION "0.03"
+#define PKOC_OSDP_VERSION "0.04"

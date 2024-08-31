@@ -58,7 +58,14 @@ int get_pkoc_settings
   status = ST_OK;
   //read pkoc-settings.json
 
-  parameters = json_load_file("/opt/osdp-conformance/etc/pkoc-settings.json", 0, &status_json);
+  parameters = json_load_file("pkoc-settings.json", 0, &status_json);
+  if (parameters EQUALS NULL)
+  {
+    parameters = json_load_file("/opt/osdp/etc/pkoc-settings.json", 0, &status_json);
+    if (parameters != NULL)
+      fprintf(ctx->log, "local settings not found, using %s\n",
+        "/opt/osdp/etc/pkoc-settings.json");
+  };
   if (parameters != NULL)
   {
     value = json_object_get(parameters, "verbosity");
@@ -85,7 +92,7 @@ int get_pkoc_state
   (PKOC_CONTEXT *ctx)
 {
   //read pkoc-state.json
-fprintf(stderr, "DEBUG: stub get_pkoc_state\n");
+fprintf(ctx->log, "DEBUG: stub get_pkoc_state\n");
 ctx->transaction_identifier_length = 16;
 memset(ctx->transaction_identifier, 0x17, 16);
   return(0);
@@ -167,7 +174,7 @@ int pkoc_parse
     // skip over the (generic) multipart header
     if (ctx->verbosity > 3)
     {
-      fprintf(stderr, "DEBUG: multipart offset %04x fraglth %04x totlth %04x\n",
+      fprintf(ctx->log, "DEBUG: multipart offset %04x fraglth %04x totlth %04x\n",
         ntohs(mph->offset), ntohs(mph->fragment_length), ntohs(mph->total_length));
     };
 
@@ -190,10 +197,10 @@ int pkoc_parse
       unprocessed = payload_length;
       while (!done)
       {
-fprintf(stderr, "index %d. ", (int)(p-payload));
+fprintf(ctx->log, "index %d. ", (int)(p-payload));
         tag = *p; p++; unprocessed --;
         length = *p; p++; unprocessed --;
-fprintf(stderr, " tag %02X length %02X\n", tag, length);
+fprintf(ctx->log, " tag %02X length %02X\n", tag, length);
         switch (tag)
         {
         default:
@@ -440,7 +447,7 @@ int validate_signature
 
 
   if (ctx->verbosity > 3)
-    fprintf(stderr, "validate_signature: top\n");
+    fprintf(ctx->log, "validate_signature: top\n");
   status = ST_OK;
   memset(&ob_context, 0, sizeof(ob_context));
   ob_context.verbosity = ctx->verbosity;
@@ -465,20 +472,20 @@ int public_key_length;
 int signature_length;
 public_key_length = 64;
 signature_length = 64;
-fprintf(stderr, "DEBUG: check validate lth sig lth pubkey (%d ?)\n", public_key_length);
-    fprintf(stderr, "Public Key:\n");
+fprintf(ctx->log, "DEBUG: check validate lth sig lth pubkey (%d ?)\n", public_key_length);
+    fprintf(ctx->log, "Public Key:\n");
     ob_dump_buffer (&ob_context, ctx->public_key, public_key_length, 0);
-    fprintf(stderr, "Signature:\n");
+    fprintf(ctx->log, "Signature:\n");
     ob_dump_buffer (&ob_context, ctx->signature, signature_length, 0);
 
     // output a DER-formatted copy of the public key.
     pubkey_der_length = sizeof(pubkey_der);
     status = initialize_pubkey_DER(ctx, ctx->public_key, public_key_length, pubkey_der, &pubkey_der_length);
-fprintf(stderr, "DEBUG: shoulda been proper length\n");
+fprintf(ctx->log, "DEBUG: shoulda been proper length\n");
   };
   if (status EQUALS ST_OK)
   {
-    fprintf(stderr, "DER Encoded Public Key:\n");
+    fprintf(ctx->log, "DER Encoded Public Key:\n");
     ob_dump_buffer(&ob_context, pubkey_der, pubkey_der_length, 0);
   };
   if (status EQUALS ST_OK)
@@ -497,7 +504,7 @@ fprintf(stderr, "DEBUG: shoulda been proper length\n");
   {
     if (crypto_context.verbosity > 3)
     {
-      fprintf(stderr, "digest...\n");
+      fprintf(ctx->log, "digest...\n");
       ob_dump_buffer(&ob_context, digest, digest_lth, 0);
     };
   };
@@ -530,10 +537,10 @@ fprintf(stderr, "DEBUG: shoulda been proper length\n");
       &public_key, digest, digest_lth,
       &signature_object, &signature_info);
     if (status EQUALS ST_OK)
-      fprintf(stderr, "***SIGNATURE VALID***\n");
+      fprintf(ctx->log, "***SIGNATURE VALID***\n");
   };
   if (ctx->verbosity > 3)
-    fprintf(stderr, "validate_signature: exit, status %d\n", status);
+    fprintf(ctx->log, "validate_signature: exit, status %d\n", status);
   return(status);
 
 } /* validate_signature */

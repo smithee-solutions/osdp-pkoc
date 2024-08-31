@@ -1,4 +1,7 @@
-// pkoc nfc (i.e. smartcard pcsc) support
+/*
+  pkoc-nfc - NFC (samartcard) support routines for osdp-pkoc
+*/
+
 
 
 #include <stdio.h>
@@ -53,6 +56,7 @@ int init_smartcard
 
   status = ST_OK;
   memset(&openbadger_context, 0, sizeof(openbadger_context));
+  openbadger_context.log = ctx->log;
   openbadger_context.rdrctx= &pcsc_reader_context;
   openbadger_context.verbosity = ctx->verbosity;
   openbadger_context.reader_index = ctx->reader;
@@ -68,8 +72,8 @@ int init_smartcard
     smartcard_command_length = sizeof(SELECT_PKOC);
     if (ctx->verbosity > 3)
     {
-      fprintf(stderr, "Select command ");
-      ob_dump_buffer(&openbadger_context, smartcard_command, smartcard_command_length, 0);
+      fprintf(ctx->log, "Select command ");
+      ob_dump_buffer(&openbadger_context, smartcard_command, smartcard_command_length, OB_DUMP_LOG);
     };
 
     // send application select to card
@@ -84,8 +88,8 @@ int init_smartcard
   {
     if (ctx->verbosity > 3)
     {
-      fprintf(stderr, "Select response ");
-      ob_dump_buffer(&openbadger_context, pbRecvBuffer, dwRecvLength, 0);
+      fprintf(ctx->log, "Select response ");
+      ob_dump_buffer(&openbadger_context, pbRecvBuffer, dwRecvLength, OB_DUMP_LOG);
     };
     // last 2 should be 0x90 0x00
     // total should be 6
@@ -134,7 +138,7 @@ unsigned char site_key_identifier [OB_PKOC_SITE_KEY_IDENTIFIER_LENGTH];
 
 
   status = ST_OK;
-fprintf(stderr,"DEBUG: site key identifier\n");
+fprintf(ctx->log,"DEBUG: site key identifier\n");
   memset(&ob_context, 0, sizeof(ob_context));
   ob_context.verbosity = ctx->verbosity;
   memset(&crypto_context, 0, sizeof(crypto_context));
@@ -182,8 +186,8 @@ fprintf(stderr,"DEBUG: site key identifier\n");
     smartcard_command_length++;
     memcpy(smartcard_command+smartcard_command_length, ctx->transaction_identifier, ctx->transaction_identifier_length);
 
-    fprintf(stderr, "Transaction Identifer:\n");
-    ob_dump_buffer (&ob_context, smartcard_command+smartcard_command_length, ctx->transaction_identifier_length, 0);
+    fprintf(ctx->log, "Transaction Identifer:\n");
+    ob_dump_buffer (&ob_context, smartcard_command+smartcard_command_length, ctx->transaction_identifier_length, OB_DUMP_LOG);
     smartcard_command_length = smartcard_command_length + ctx->transaction_identifier_length;
     
     // tag,length,value - reader identifier
@@ -203,8 +207,8 @@ fprintf(stderr,"DEBUG: site key identifier\n");
     smartcard_command [smartcard_command_length] = msg_le;
     smartcard_command_length++;
 
-    fprintf(stderr, "Marshalled Authentication Command:\n");
-    ob_dump_buffer (&ob_context, smartcard_command, smartcard_command_length, 0);
+    fprintf(ctx->log, "Marshalled Authentication Command:\n");
+    ob_dump_buffer (&ob_context, smartcard_command, smartcard_command_length, OB_DUMP_LOG);
   };
   if (status EQUALS ST_OK)
   {
@@ -218,8 +222,8 @@ fprintf(stderr,"DEBUG: site key identifier\n");
   };
   if (status EQUALS ST_OK)
   {
-    fprintf(stderr, "Authentication returns:\n");
-    ob_dump_buffer (&ob_context, pbRecvBuffer, dwRecvLength, 0);
+    fprintf(ctx->log, "Authentication returns:\n");
+    ob_dump_buffer (&ob_context, pbRecvBuffer, dwRecvLength, OB_DUMP_LOG);
   };
   if (status EQUALS ST_OK)
   {
@@ -269,10 +273,10 @@ fprintf(stderr,"DEBUG: site key identifier\n");
       p = p + payload_size;
       remainder = remainder - payload_size;
     };
-    fprintf(stderr, "Public Key:\n");
-    ob_dump_buffer (&ob_context, ctx->public_key, ctx->public_key_length, 0);
-    fprintf(stderr, "Signature:\n");
-    ob_dump_buffer (&ob_context, ctx->signature, ctx->signature_length, 0);
+    fprintf(ctx->log, "Public Key:\n");
+    ob_dump_buffer (&ob_context, ctx->public_key, ctx->public_key_length, OB_DUMP_LOG);
+    fprintf(ctx->log, "Signature:\n");
+    ob_dump_buffer (&ob_context, ctx->signature, ctx->signature_length, OB_DUMP_LOG);
   };
   return(status);
 
@@ -331,14 +335,14 @@ int initialize_signature_DER
     whole_length++;
     ec_signature_der_skeleton_1 [3] = 0x21;
     if (ctx->verbosity > 9)
-      fprintf(stderr, "part 1 first octet %02X\n", *part_1);
+      fprintf(ctx->log, "part 1 first octet %02X\n", *part_1);
   };
   if (0x80 & *part_2)
   {
     whole_length++;
     ec_signature_der_skeleton_2 [1] = 0x21;
     if (ctx->verbosity > 9)
-      fprintf(stderr, "part 2 first octet %02X\n", *part_2);
+      fprintf(ctx->log, "part 2 first octet %02X\n", *part_2);
   };
   ec_signature_der_skeleton_1 [1] = whole_length;
 
@@ -347,7 +351,7 @@ int initialize_signature_DER
   if (!(0x80 & *part_1))
     lth--;
   if (ctx->verbosity > 9)
-    fprintf(stderr, "part 1 write length %d.\n", lth);
+    fprintf(ctx->log, "part 1 write length %d.\n", lth);
 
   fwrite(ec_signature_der_skeleton_1, 1, lth, ec_der_sig);
   pwholesig = marshalled_signature;
@@ -364,7 +368,7 @@ int initialize_signature_DER
   if (!(0x80 & *part_2))
     lth--;
   if (ctx->verbosity > 9)
-    fprintf(stderr, "part 2 write length %d.\n", lth);
+    fprintf(ctx->log, "part 2 write length %d.\n", lth);
 
   fwrite(ec_signature_der_skeleton_2, 1, lth, ec_der_sig);
   memcpy(pwholesig, ec_signature_der_skeleton_2, lth);

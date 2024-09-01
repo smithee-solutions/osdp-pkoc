@@ -2,6 +2,7 @@ release notice for osdp-pkoc
 
 changes in 0.04
 auth response received, debugging acu-side processing.
+add logging /opt/osdp/log
 
 changes in 0.03
 fixed postinstall

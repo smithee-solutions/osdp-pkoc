@@ -8,6 +8,8 @@
   - assumes settings are in /opt/osdp-conformance/etc/pkoc-settings.json
   - assumes multipart header
 
+  Writes log to /opt/osdp/log/osdp-pkoc-pd.log
+
   (C)2024 Smithee Solutions LLC
 */
 
@@ -36,7 +38,12 @@ int main
 
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
-  ctx->log = stderr;
+  ctx->log = fopen("/opt/osdp/log/osdp-pkoc-pd.log", "w");
+  if (ctx->log EQUALS NULL)
+  {
+    ctx->log = stderr;
+    fprintf(stderr, "Log open failed (%s), falling back to stderr\n", "/opt/osdp/log/osdp-pkoc-pd.log");
+  };
  
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)

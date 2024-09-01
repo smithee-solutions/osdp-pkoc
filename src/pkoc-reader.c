@@ -165,7 +165,7 @@ fprintf(ctx->log, "DEBUG: protocol version etc to context\n");
   if ((status EQUALS ST_OK) && (send_response))
   {
     sprintf(osdp_directive,
-"{\"command\":\"mfgrep\",\"oui\":\"%s\",\"response-id\":\"%02X\",\"response-specific-data\":\"%s\"}\n",
+"{\"command\":\"mfgrep\",\"oui\":\"%s\",\"response-id\":\"%02X\",\"response-specific-data\":\"%s\"}",
     my_oui_string, my_response_id, my_payload_hex_string);
     if (ctx->verbosity > 3)
       fprintf(ctx->log, "DEBUG: directive is: %s\n", osdp_directive);

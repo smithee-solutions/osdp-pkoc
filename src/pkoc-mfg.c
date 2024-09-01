@@ -83,9 +83,9 @@ int main
           };
           break;
         case OSDP_PKOC_AUTH_REQUEST:
-          system("/opt/osdp-conformance/bin/pkoc-reader --auth-request");
           if (ctx->verbosity > 3)
-            fprintf(ctx->log, "PKOC: MFG AUTH_REQUEST processed.\n");
+            fprintf(ctx->log, "PKOC: Processing MFG AUTH_REQUEST.\n");
+          system("/opt/osdp-conformance/bin/pkoc-reader --auth-request");
           break;
         };
       };

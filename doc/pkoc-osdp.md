@@ -1,3 +1,9 @@
+### Set-Up ###
+
+- create pkoc-settings.json in /opt/osdp/etc.  To set the smartcard reader,
+use "reader":"1". To debug, use verbosity:9.
+- create /opt/osdp/log
+
 ```
 // program pkoc-init-od
 // program pkoc mfgrep action routine

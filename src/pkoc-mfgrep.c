@@ -21,6 +21,11 @@
 
 #include <pkoc-osdp.h>
 
+FILE *log_global;
+void eac_log(char *message)
+{ fprintf(log_global, "%s", message); }
+
+
 
 int main
   (int argc,
@@ -48,6 +53,7 @@ int main
     fprintf(stderr, "Log open failed (%s), falling back to stderr\n", "/opt/osdp/log/osdp-pkoc-pd.log");
   };
  
+  log_global = ctx->log;
   fprintf(ctx->log, "pkoc-mfgrep: processing PD response\n");
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)
@@ -59,6 +65,7 @@ int main
       status = get_pkoc_state(ctx);
       if (status EQUALS ST_OK)
       {
+        fflush(ctx->log);
         sscanf(ctx->command_s, "%x", &i);
         ctx->response_id = i;
         switch(ctx->response_id)
@@ -79,6 +86,7 @@ int main
           };
           if (status EQUALS ST_OK)
           {
+            fflush(ctx->log);
             status = validate_signature(ctx, public_key_bits);
             if (status EQUALS ST_OK)
             {
@@ -90,6 +98,7 @@ int main
                 fprintf(ctx->log, "%02X", public_key_bits [i]);
               fprintf(ctx->log, "\n");
             };
+            fflush(ctx->log);
           };
           break;
         case OSDP_PKOC_CARD_PRESENT:

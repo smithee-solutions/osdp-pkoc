@@ -1,3 +1,5 @@
+// pkoc-parse.c
+
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -450,6 +452,7 @@ int validate_signature
   status = ST_OK;
   memset(&ob_context, 0, sizeof(ob_context));
   ob_context.verbosity = ctx->verbosity;
+  ob_context.log = ctx->log;
   memset(&crypto_context, 0, sizeof(crypto_context));
   crypto_context.verbosity = ctx->verbosity;
   crypto_context.eac_log = eac_log;
@@ -473,9 +476,9 @@ public_key_length = 64;
 signature_length = 64;
 fprintf(ctx->log, "DEBUG: check validate lth sig lth pubkey (%d ?)\n", public_key_length);
     fprintf(ctx->log, "Public Key:\n");
-    ob_dump_buffer (&ob_context, ctx->public_key, public_key_length, 0);
+    ob_dump_buffer (&ob_context, ctx->public_key, public_key_length, OB_DUMP_LOG);
     fprintf(ctx->log, "Signature:\n");
-    ob_dump_buffer (&ob_context, ctx->signature, signature_length, 0);
+    ob_dump_buffer (&ob_context, ctx->signature, signature_length, OB_DUMP_LOG);
 
     // output a DER-formatted copy of the public key.
     pubkey_der_length = sizeof(pubkey_der);
@@ -485,7 +488,7 @@ fprintf(ctx->log, "DEBUG: shoulda been proper length\n");
   if (status EQUALS ST_OK)
   {
     fprintf(ctx->log, "DER Encoded Public Key:\n");
-    ob_dump_buffer(&ob_context, pubkey_der, pubkey_der_length, 0);
+    ob_dump_buffer(&ob_context, pubkey_der, pubkey_der_length, OB_DUMP_LOG);
   };
   if (status EQUALS ST_OK)
   {
@@ -504,7 +507,7 @@ fprintf(ctx->log, "DEBUG: shoulda been proper length\n");
     if (crypto_context.verbosity > 3)
     {
       fprintf(ctx->log, "digest...\n");
-      ob_dump_buffer(&ob_context, digest, digest_lth, 0);
+      ob_dump_buffer(&ob_context, digest, digest_lth, OB_DUMP_LOG);
     };
   };
 

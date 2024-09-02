@@ -61,9 +61,12 @@ int get_pkoc_settings
   parameters = json_load_file("pkoc-settings.json", 0, &status_json);
   if (parameters EQUALS NULL)
   {
-    parameters = json_load_file("/opt/osdp/etc/pkoc-settings.json", 0, &status_json);
-    if (parameters != NULL)
+    if (parameters EQUALS NULL)
       fprintf(ctx->log, "local settings not found, using %s\n",
+        "/opt/osdp/etc/pkoc-settings.json");
+    parameters = json_load_file("/opt/osdp/etc/pkoc-settings.json", 0, &status_json);
+    if (parameters EQUALS NULL)
+      fprintf(ctx->log, "global settings not found (%s)\n",
         "/opt/osdp/etc/pkoc-settings.json");
   };
   if (parameters != NULL)
@@ -78,10 +81,6 @@ int get_pkoc_settings
     {
       sscanf(json_string_value(value), "%d", &(ctx->reader));
     };
-  }
-  else
-  {
-    status = ST_PKOC_BAD_SETTINGS;
   };
   return(status);
 

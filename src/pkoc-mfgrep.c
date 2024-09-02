@@ -41,8 +41,14 @@ int main
 
   ctx = &my_context;
   memset(ctx, 0, sizeof(*ctx));
-  ctx->log = stderr;
+  ctx->log = fopen("/opt/osdp/log/osdp-pkoc-acu.log", "a");
+  if (ctx->log EQUALS NULL)
+  {
+    ctx->log = stderr;
+    fprintf(stderr, "Log open failed (%s), falling back to stderr\n", "/opt/osdp/log/osdp-pkoc-pd.log");
+  };
  
+  fprintf(ctx->log, "pkoc-mfgrep: processing PD response\n");
   status = get_pkoc_settings(ctx);
   if (status EQUALS ST_OK)
     status = unpack_command(ctx, argc, argv);
@@ -78,11 +84,11 @@ int main
             {
               int i;
               int first_bit_index;
-              fprintf(stderr, "PKOC: 64 bit card value: ");
+              fprintf(ctx->log, "PKOC: 64 bit card value: ");
               first_bit_index = (256/8) - (64/8);
               for (i=first_bit_index; i<first_bit_index+(64/8); i++)
-                fprintf(stderr, "%02X", public_key_bits [i]);
-              fprintf(stderr, "\n");
+                fprintf(ctx->log, "%02X", public_key_bits [i]);
+              fprintf(ctx->log, "\n");
             };
           };
           break;
@@ -136,7 +142,7 @@ int main
             sprintf(osdp_directive,
 "{\"command\":\"mfg\",\"oui\":\"%s\",\"command-id\":\"%02X\",\"command-specific-data\":\"%s\"}\n",
     PKOC_OUI_STRING, OSDP_PKOC_AUTH_REQUEST, command_buffer);
-fprintf(stderr, "DEBUG: directive is: %s\n", osdp_directive);
+fprintf(ctx->log, "DEBUG: directive is: %s\n", osdp_directive);
             status = send_osdp_command(ctx, "", osdp_directive);
           };
           break;

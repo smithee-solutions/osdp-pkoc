@@ -140,7 +140,7 @@ int main
           if (status EQUALS ST_OK)
           {
             sprintf(osdp_directive,
-"{\"command\":\"mfg\",\"oui\":\"%s\",\"command-id\":\"%02X\",\"command-specific-data\":\"%s\"}\n",
+"{\"command\":\"mfg\",\"oui\":\"%s\",\"command-id\":\"%02X\",\"command-specific-data\":\"%s\"}",
     PKOC_OUI_STRING, OSDP_PKOC_AUTH_REQUEST, command_buffer);
 fprintf(ctx->log, "DEBUG: directive is: %s\n", osdp_directive);
             status = send_osdp_command(ctx, "", osdp_directive);

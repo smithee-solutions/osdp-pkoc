@@ -83,6 +83,15 @@ int main
           if ((status EQUALS ST_OK) && (ctx->payload_mask & PAYLOAD_HAS_SIGNATURE))
           {
             memcpy(ctx->signature, contents [IDX_SIG].value, contents [IDX_SIG].length);
+{
+  fprintf(ctx->log, "idx sig %d length %d\n", IDX_SIG, contents [IDX_SIG].length);
+  fprintf(ctx->log, "signature extracted from auth response:\n");
+  fflush(ctx->log);
+  for (i=0; i<contents[IDX_SIG].length; i++)
+    fprintf(ctx->log, "%02X", contents [IDX_SIG].value[i]);
+  fprintf(ctx->log, "\n");
+  fflush(ctx->log);
+};
           };
           if (status EQUALS ST_OK)
           {
@@ -90,7 +99,6 @@ int main
             status = validate_signature(ctx, public_key_bits);
             if (status EQUALS ST_OK)
             {
-              int i;
               int first_bit_index;
               fprintf(ctx->log, "PKOC: 64 bit card value: ");
               first_bit_index = (256/8) - (64/8);
